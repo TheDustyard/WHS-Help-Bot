@@ -1,6 +1,6 @@
-use serde::[Deserialize];
+use serde::{Deserialize};
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug)]
 pub struct StaticConfiguration {
     server_id: String;
 }
