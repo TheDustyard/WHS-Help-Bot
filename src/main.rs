@@ -17,7 +17,8 @@ use serenity::framework::standard::{
         help
     }
 };
-use std::fs::File;
+use std::fs;
+use std::env;
 use std::collections::HashSet;
 
 group!({
@@ -47,14 +48,14 @@ fn help_command(
 
 fn main() {
     // Open file
-    let config_reader = File::open("./config.json").expect("Failed to open ./config.json");
+    let config_file = fs::read_to_string("./config.toml").expect("Failed to open ./config.json");
     // Load config
-    let config: config::StaticConfiguration = serde_json::from_reader(config_reader).unwrap();
+    let config: config::StaticConfiguration = toml::from_str(&config_file).unwrap();
 
     println!("{:#?}", config);
 
     // Login with a bot token from the environment
-    let mut client = Client::new(&config.token, Handler)
+    let mut client = Client::new(&env::var("TOKEN").expect("Missing TOKEN environment variable"), Handler)
         .expect("Error creating client");
     client.with_framework(StandardFramework::new()
         .configure(|c| c.prefix("~")) // set the bot's prefix to "~"

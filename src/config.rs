@@ -1,6 +1,6 @@
 use serde::{Deserialize};
 use serenity::model::id::{
-    UserId, RoleId
+    UserId, RoleId, GuildId
 };
 use std::collections::HashMap;
 
@@ -17,7 +17,7 @@ pub struct StaticConfiguration {
 #[derive(Deserialize, Debug)]
 pub struct ServerConfig {
     /// The server id to manage
-    pub id: String,
+    pub id: GuildId,
     /// The owner of the bot
     pub owner: UserId,
     /// The adminatrator roles that can run admin commands
@@ -29,7 +29,7 @@ pub struct RolesConfig {
     /// Roles to auto assign on join
     pub auto_assign: Vec<RoleId>,
     /// The role to designate that a user has joined the server
-    pub joined: Vec<RoleId>
+    pub joined: RoleId
 }
 
 #[derive(Deserialize, Debug)]
