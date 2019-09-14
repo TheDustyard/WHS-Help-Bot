@@ -1,0 +1,17 @@
+[server] # Configuration for the server
+id = 609141661884481543 # Server ID
+owner = 168827261682843648 # DusterTheFirst
+admin_roles = [
+    609146598756319292, # Administrative Helper
+    609146291389464577 # Admin
+]
+
+[roles] # Configuration about the roles
+auto_assign = [] # Roles to auto assign on join (ex. "group" roles)
+joined = 609171335016611841 # The role to show that a user has joined
+
+[classes.history] # Information about the history class levels
+cp = { role = 609149155323150346, name = "CP US History" }
+acp = { role = 609773939736182803, name = "Honors US History" }
+honors = { role = 609773945796821022, name = "CP US History" }
+ap = { role = 609149183932497950, name = "AP US History" }
