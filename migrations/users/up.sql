@@ -1,0 +1,4 @@
+CREATE TABLE users (
+    id TEXT PRIMARY KEY NOT NULL,
+    name TEXT NOT NULL
+)
