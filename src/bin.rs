@@ -13,9 +13,7 @@ use serenity::prelude::*;
 use std::env;
 use std::fs;
 
-use bot_framework::db;
-use bot_framework::db::models::DatabaseUser;
-use bot_framework::establish_connection;
+use bot_framework::{establish_connection, sample_users, sample_classes};
 
 embed_migrations!("./migrations");
 
@@ -24,8 +22,6 @@ struct Handler;
 impl EventHandler for Handler {}
 
 fn main() {
-    use db::schema::users::dsl::*;
-
     let connection = establish_connection();
 
     // Setup database
@@ -33,15 +29,8 @@ fn main() {
     // should call embedded_migrations::run_with_output.
     embedded_migrations::run_with_output(&connection, &mut std::io::stdout()).unwrap();
 
-    let results = users
-        .limit(5)
-        .load::<DatabaseUser>(&connection)
-        .expect("Error loading users");
-
-    println!("Displaying {} of {} users", results.len(), users.count().get_result::<i64>(&connection).unwrap());
-    for user in results {
-        println!("{}: {}", user.id, user.name);
-    }
+    sample_users(&connection);
+    sample_classes(&connection)
 
     // // Open file
     // let config_file = fs::read_to_string("./config.toml").expect("Failed to open ./config.json");
