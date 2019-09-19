@@ -1,3 +1,6 @@
+[bot] # Configuration for the bot
+prefix = "!"
+
 [server] # Configuration for the server
 id = 609141661884481543 # Server ID
 owner = 168827261682843648 # DusterTheFirst

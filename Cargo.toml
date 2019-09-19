@@ -17,9 +17,9 @@ libsqlite3-sys = { version = "0.9.1", features = ["bundled"]}
 uuid = { version = "0.7.4", features = ["v4", "serde"] }
 
 [lib]
-name = "bot_framework"
+name = "lib"
 path = "src/lib.rs"
 
 [[bin]]
-name = "bot_binary"
+name = "bin"
 path = "src/bin.rs"

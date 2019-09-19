@@ -2,6 +2,7 @@ table! {
     classes (id) {
         id -> Text,
         name -> Text,
+        role -> Text,
     }
 }
 

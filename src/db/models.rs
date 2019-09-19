@@ -1,7 +1,8 @@
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
-use serenity::model::id::UserId;
-use uuid::Uuid;
+use serenity::model::id::{RoleId, UserId};
+use serenity::model::misc::{RoleIdParseError, UserIdParseError};
+use uuid::{parser::ParseError, Uuid};
 
 #[derive(Queryable, Debug)]
 pub struct DatabaseUser {
@@ -14,28 +15,24 @@ pub struct DatabaseUser {
 }
 
 impl DatabaseUser {
-    pub fn get_classes_ids(&self) -> Vec<Uuid> {
+    pub fn get_classes_ids(&self) -> Result<Vec<Uuid>, ParseError> {
         self.classes
             .split(",")
-            .map(|x| Uuid::parse_str(x).expect("Malformed uuid in user classes"))
+            .map(|x| Uuid::parse_str(x))
             .collect()
     }
 
-    pub fn get_classes(&self, connection: &SqliteConnection) -> Vec<DatabaseClass> {
+    pub fn get_classes(&self, connection: &SqliteConnection) -> QueryResult<Vec<DatabaseClass>> {
         use crate::db::schema::classes::dsl::*;
 
         self.classes
             .split(",")
-            .map(|x| classes.find(x).first(connection).unwrap())
+            .map(|x| classes.find(x).first(connection))
             .collect()
     }
 
-    pub fn get_id(&self) -> UserId {
-        UserId(
-            self.id
-                .parse::<u64>()
-                .expect("Unparsable u64 UserId in database"),
-        )
+    pub fn get_id(&self) -> Result<UserId, UserIdParseError> {
+        self.id.parse::<UserId>()
     }
 }
 
@@ -45,10 +42,16 @@ pub struct DatabaseClass {
     id: String,
     /// The class name
     pub name: String,
+    /// The role to use to display the class
+    role: String,
 }
 
 impl DatabaseClass {
     pub fn get_id(&self) -> Uuid {
         Uuid::parse_str(&self.id).expect("Malformed class id")
+    }
+
+    pub fn get_role(&self) -> Result<RoleId, RoleIdParseError> {
+        self.role.parse::<RoleId>()
     }
 }

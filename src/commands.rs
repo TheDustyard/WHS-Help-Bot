@@ -7,6 +7,7 @@ use serenity::framework::standard::{
 use serenity::model::{channel::Message, id::UserId};
 use serenity::prelude::*;
 use std::collections::HashSet;
+use std::io::Write;
 
 #[help]
 #[command_not_found_text = "Could not find: `{}`."]
@@ -38,7 +39,7 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 fn classes(ctx: &mut Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read();
 
-    let mut temp = Vec::new();
+    let mut temp = Vec::from("```rs\n".as_bytes());
 
     crate::sample_classes(
         &data
@@ -48,6 +49,8 @@ fn classes(ctx: &mut Context, msg: &Message) -> CommandResult {
             .unwrap(),
         &mut temp,
     );
+
+    (&mut temp).write("```".as_bytes()).unwrap();
 
     msg.channel_id
         .say(&ctx.http, std::str::from_utf8(&temp).unwrap())
@@ -60,7 +63,7 @@ fn classes(ctx: &mut Context, msg: &Message) -> CommandResult {
 fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read();
 
-    let mut temp = Vec::new();
+    let mut temp = Vec::from("```rs\n".as_bytes());
 
     crate::sample_users(
         &data
@@ -70,6 +73,8 @@ fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
             .unwrap(),
         &mut temp,
     );
+
+    (&mut temp).write("```".as_bytes()).unwrap();
 
     msg.channel_id
         .say(&ctx.http, std::str::from_utf8(&temp).unwrap())

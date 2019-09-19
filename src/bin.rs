@@ -4,7 +4,7 @@ extern crate diesel_migrations;
 use serenity::framework::standard::StandardFramework;
 use std::sync::{Arc, Mutex};
 
-use bot_framework::*;
+use lib::*;
 
 embed_migrations!("./migrations");
 
@@ -28,7 +28,7 @@ fn main() {
     let mut client = connect_discord();
     client.with_framework(
         StandardFramework::new()
-            .configure(|c| c.prefix("~")) // set the bot's prefix to "~"
+            .configure(|c| c.prefix(&config.bot.prefix)) // set the bot's prefix to "!"
             .help(&commands::HELP_COMMAND) // Help
             .group(&commands::GENERAL_GROUP),
     );
@@ -38,6 +38,13 @@ fn main() {
         let mut data = client.data.write();
         data.insert::<SqliteDatabaseConnection>(Arc::new(Mutex::new(connection)));
     }
+
+    println!(
+        "Starting bot {:?} with prefix {}",
+        // TODO: more idk
+        client.cache_and_http.http.get_current_application_info().unwrap().name,
+        config.bot.prefix
+    );
 
     // start listening for events by starting a single shard
     if let Err(why) = client.start() {

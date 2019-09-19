@@ -5,6 +5,8 @@ use serenity::model::id::{
 
 #[derive(Deserialize, Debug)]
 pub struct StaticConfiguration {
+    /// Configuration for the bot
+    pub bot: BotConfig,
     /// Configuration for the server
     pub server: ServerConfig,
     /// Configuration for the different roles
@@ -27,4 +29,10 @@ pub struct RolesConfig {
     pub auto_assign: Vec<RoleId>,
     /// The role to designate that a user has joined the server
     pub joined: RoleId
+}
+
+#[derive(Deserialize, Debug)]
+pub struct BotConfig {
+    /// The prefix for the bot
+    pub prefix: String
 }

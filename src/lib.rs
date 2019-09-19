@@ -65,7 +65,7 @@ pub fn sample_users<W: Write>(connection: &SqliteConnection, w: &mut W) {
     for user in results {
         writeln!(
             w,
-            "{:?} | {} | {:?}",
+            "{:#?}\n{:?}\n{:#?}\n\n",
             user,
             user.get_id(),
             user.get_classes(connection)
@@ -89,7 +89,7 @@ pub fn sample_classes<W: Write>(connection: &SqliteConnection, w: &mut W) {
         classes.count().get_result::<i64>(connection).unwrap()
     ).unwrap();
     for class in results {
-        writeln!(w, "{:?} | {}", class, class.get_id().is_nil()).unwrap();
+        writeln!(w, "{:#?}\nis valid UUID: {}\nroleId: {:?}\n\n", class, !class.get_id().is_nil(), class.get_role()).unwrap();
     }
 }
 
