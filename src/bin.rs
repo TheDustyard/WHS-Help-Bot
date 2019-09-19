@@ -2,6 +2,7 @@
 extern crate diesel_migrations;
 
 use serenity::framework::standard::StandardFramework;
+use std::sync::{Arc, Mutex};
 
 use bot_framework::*;
 
@@ -31,6 +32,12 @@ fn main() {
             .help(&commands::HELP_COMMAND) // Help
             .group(&commands::GENERAL_GROUP),
     );
+
+    // Persist database connection
+    {
+        let mut data = client.data.write();
+        data.insert::<SqliteDatabaseConnection>(Arc::new(Mutex::new(connection)));
+    }
 
     // start listening for events by starting a single shard
     if let Err(why) = client.start() {

@@ -4,12 +4,11 @@ extern crate diesel;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use serenity::client::Client;
-use serenity::framework::standard::StandardFramework;
-use serenity::model::user::User;
 use serenity::prelude::*;
 use std::env;
 use std::fs;
 use std::io::Write;
+use std::sync::{Arc, Mutex};
 
 use crate::db::models::{DatabaseClass, DatabaseUser};
 
@@ -33,6 +32,14 @@ pub fn establish_connection() -> SqliteConnection {
 struct Handler;
 
 impl EventHandler for Handler {}
+
+
+// TODO: ^^
+pub struct SqliteDatabaseConnection;
+
+impl TypeMapKey for SqliteDatabaseConnection {
+    type Value = Arc<Mutex<SqliteConnection>>;
+}
 
 pub fn connect_discord() -> Client {
     let token = env::var("TOKEN").expect("Missing TOKEN environment variable");

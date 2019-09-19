@@ -2,7 +2,6 @@ use serde::{Deserialize};
 use serenity::model::id::{
     UserId, RoleId, GuildId
 };
-use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 pub struct StaticConfiguration {

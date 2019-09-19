@@ -1,20 +1,11 @@
-use serenity::model::{
-    channel::Message,
-    id::UserId
-};
-use serenity::prelude::*;
+use crate::SqliteDatabaseConnection;
 use serenity::framework::standard::{
-    Args,
-    HelpOptions,
-    CommandGroup,
-    CommandResult,
     help_commands,
-    macros::{
-        command,
-        group,
-        help
-    }
+    macros::{command, group, help},
+    Args, CommandGroup, CommandResult, HelpOptions,
 };
+use serenity::model::{channel::Message, id::UserId};
+use serenity::prelude::*;
 use std::collections::HashSet;
 
 #[help]
@@ -25,7 +16,7 @@ fn help_command(
     args: Args,
     help_options: &'static HelpOptions,
     groups: &[&'static CommandGroup],
-    owners: HashSet<UserId>
+    owners: HashSet<UserId>,
 ) -> CommandResult {
     help_commands::with_embeds(context, msg, args, &help_options, groups, owners)
 }
@@ -45,19 +36,44 @@ fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
 
 #[command]
 fn classes(ctx: &mut Context, msg: &Message) -> CommandResult {
-    let temp = String::new();
+    let data = ctx.data.read();
 
-    crate::sample_classes(connection: &SqliteConnection, temp);
+    let mut temp = Vec::new();
 
-    ctx.http.send_message(msg.channel_id, temp);
-    msg.reply(ctx, "Pong!")?;
+    crate::sample_classes(
+        &data
+            .get::<SqliteDatabaseConnection>()
+            .unwrap()
+            .lock()
+            .unwrap(),
+        &mut temp,
+    );
+
+    msg.channel_id
+        .say(&ctx.http, std::str::from_utf8(&temp).unwrap())
+        .unwrap();
 
     Ok(())
 }
 
 #[command]
 fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!")?;
+    let data = ctx.data.read();
+
+    let mut temp = Vec::new();
+
+    crate::sample_users(
+        &data
+            .get::<SqliteDatabaseConnection>()
+            .unwrap()
+            .lock()
+            .unwrap(),
+        &mut temp,
+    );
+
+    msg.channel_id
+        .say(&ctx.http, std::str::from_utf8(&temp).unwrap())
+        .unwrap();
 
     Ok(())
 }
