@@ -33,11 +33,30 @@ fn help_command(
 group!({
     name: "General",
     options: {},
-    commands: [ping],
+    commands: [ping, classes, users],
 });
 
 #[command]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
+    msg.reply(ctx, "Pong!")?;
+
+    Ok(())
+}
+
+#[command]
+fn classes(ctx: &mut Context, msg: &Message) -> CommandResult {
+    let temp = String::new();
+
+    crate::sample_classes(connection: &SqliteConnection, temp);
+
+    ctx.http.send_message(msg.channel_id, temp);
+    msg.reply(ctx, "Pong!")?;
+
+    Ok(())
+}
+
+#[command]
+fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
     msg.reply(ctx, "Pong!")?;
 
     Ok(())

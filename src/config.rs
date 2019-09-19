@@ -9,9 +9,7 @@ pub struct StaticConfiguration {
     /// Configuration for the server
     pub server: ServerConfig,
     /// Configuration for the different roles
-    pub roles: RolesConfig,
-    /// Configuration for the different classes and their levels
-    pub classes: HashMap<String, HashMap<String, ClassConfig>>
+    pub roles: RolesConfig
 }
 
 #[derive(Deserialize, Debug)]
@@ -30,12 +28,4 @@ pub struct RolesConfig {
     pub auto_assign: Vec<RoleId>,
     /// The role to designate that a user has joined the server
     pub joined: RoleId
-}
-
-#[derive(Deserialize, Debug)]
-pub struct ClassConfig {
-    /// The role that denotes the possesion of the class
-    role: RoleId,
-    /// The name of the class
-    name: String
 }
