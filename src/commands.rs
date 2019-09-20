@@ -24,7 +24,9 @@ fn help_command(
 
 group!({
     name: "General",
-    options: {},
+    options: {
+        description: "General commands"
+    },
     commands: [ping, classes, users],
 });
 

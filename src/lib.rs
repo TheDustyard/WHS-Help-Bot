@@ -3,12 +3,15 @@ extern crate diesel;
 
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
+use prettytable::Table;
 use serenity::client::Client;
 use serenity::prelude::*;
 use std::env;
 use std::fs;
 use std::io::Write;
 use std::sync::{Arc, Mutex};
+
+use prettytable::{cell, row};
 
 use crate::db::models::{DatabaseClass, DatabaseUser};
 
@@ -32,7 +35,6 @@ pub fn establish_connection() -> SqliteConnection {
 struct Handler;
 
 impl EventHandler for Handler {}
-
 
 // TODO: ^^
 pub struct SqliteDatabaseConnection;
@@ -61,16 +63,29 @@ pub fn sample_users<W: Write>(connection: &SqliteConnection, w: &mut W) {
         "Displaying {} of {} users",
         results.len(),
         users.count().get_result::<i64>(connection).unwrap()
-    ).unwrap();
+    )
+    .unwrap();
+
+    let mut table = Table::new();
+
+    table.add_row(row!["USER ID", "NAME", "CLASSES"]);
+
     for user in results {
-        writeln!(
-            w,
-            "{:#?}\n{:?}\n{:#?}\n\n",
-            user,
-            user.get_id(),
-            user.get_classes(connection)
-        ).unwrap();
+        table.add_row(row![
+            format!("{:?}", user.get_id()),
+            user.name,
+            format!(
+                "{:?}",
+                user.get_classes(connection)
+                    .unwrap()
+                    .iter()
+                    .map(|x| x.name.clone())
+                    .collect::<Vec<String>>()
+            )
+        ]);
     }
+
+    writeln!(w, "{}", table).unwrap();
 }
 
 #[deprecated]
@@ -87,10 +102,24 @@ pub fn sample_classes<W: Write>(connection: &SqliteConnection, w: &mut W) {
         "Displaying {} of {} classes",
         results.len(),
         classes.count().get_result::<i64>(connection).unwrap()
-    ).unwrap();
-    for class in results {
-        writeln!(w, "{:#?}\nis valid UUID: {}\nroleId: {:?}\n\n", class, !class.get_id().is_nil(), class.get_role()).unwrap();
+    )
+    .unwrap();
+    writeln!(w, "{}", table_classes(results)).unwrap();
+}
+
+fn table_classes(classes: Vec<DatabaseClass>) -> prettytable::Table {
+    let mut table = Table::new();
+    table.add_row(row!["UUID", "NAME", "ROLE ID"]);
+
+    for class in classes {
+        table.add_row(row![
+            class.get_id().to_string()[0..8],
+            class.name,
+            format!("{:?}", class.get_role())
+        ]);
     }
+
+    table
 }
 
 pub fn load_config() -> Result<config::StaticConfiguration, toml::de::Error> {
