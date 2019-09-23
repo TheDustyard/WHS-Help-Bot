@@ -1,26 +1,24 @@
 use crate::SqliteDatabaseConnection;
 use serenity::framework::standard::{
-    macros::{command, group},
+    macros::{command},
     CommandResult,
+    Args
 };
-use serenity::model::{channel::Message};
+use serenity::model::{channel::Message, id::UserId};
 use serenity::prelude::*;
 use std::io::Write;
 
-group!({
-    name: "Classes",
-    options: {
-        description: "Class management commands",
-        prefixes: ["classes", "c"],
-        // default_command: list,
-    },
-    commands: [list],
-});
-
 #[command]
 #[description = "List the classes."]
-fn list(ctx: &mut Context, msg: &Message) -> CommandResult {
+pub fn classes(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let data = ctx.data.read();
+
+    // TODO: work for single class
+    if let Ok(user) = args.single::<UserId>() {
+        msg.channel_id
+            .say(&ctx.http, format!("{:?}", user))
+            .unwrap();
+    }
 
     let mut temp = Vec::from("```rs\n".as_bytes());
 

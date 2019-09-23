@@ -31,8 +31,7 @@ fn main() {
             .configure(|c| c.prefix(&config.bot.prefix)) // set the bot's prefix to "!"
             .help(&commands::HELP_COMMAND) // Help
             .group(&commands::GENERAL_GROUP)
-            .group(&commands::users::USERS_GROUP)
-            .group(&commands::classes::CLASSES_GROUP),
+            .group(&commands::MANAGEMENT_GROUP)
     );
 
     // Persist database connection

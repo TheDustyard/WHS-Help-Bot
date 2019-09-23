@@ -1,24 +1,15 @@
 use crate::SqliteDatabaseConnection;
 use serenity::framework::standard::{
-    macros::{command, group},
+    macros::{command},
     CommandResult,
 };
 use serenity::model::{channel::Message};
 use serenity::prelude::*;
 use std::io::Write;
 
-group!({
-    name: "Users",
-    options: {
-        description: "User management commands",
-        prefixes: ["users", "u"],
-        // default_command: list,
-    },
-    commands: [list],
-});
-
 #[command]
-fn list(ctx: &mut Context, msg: &Message) -> CommandResult {
+#[description = "List the users."]
+pub fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read();
 
     let mut temp = Vec::from("```\n".as_bytes());

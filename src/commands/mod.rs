@@ -12,6 +12,9 @@ use std::collections::HashSet;
 pub mod classes;
 pub mod users;
 
+use classes::CLASSES_COMMAND;
+use users::USERS_COMMAND;
+
 #[help]
 fn help_command(
     context: &mut Context,
@@ -32,17 +35,27 @@ group!({
     commands: [ping],
 });
 
+group!({
+    name: "Management",
+    options: {
+        description: "User management commands"
+    },
+    commands: [users, classes],
+});
+
+// TODO: error checks, shid like that
+// group!({
+//     name: "Admin",
+//     options: {
+//         description: "Administrative commands",
+//         checks: // TODO:
+//     },
+//     commands: [],
+// });
+
 #[command]
 fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
     msg.reply(ctx, "Pong!")?;
 
     Ok(())
 }
-
-// #[command]
-// fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
-//     msg.reply(ctx, "h!")?;
-
-//     Ok(())
-//     // help_commands::with_embeds(context, msg, args, help_options, groups, owners)
-// }
