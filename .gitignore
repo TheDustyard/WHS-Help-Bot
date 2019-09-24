@@ -2,3 +2,4 @@
 **/*.rs.bk
 *.db
 .env.local
+.DS_Store

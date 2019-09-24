@@ -50,8 +50,10 @@ pub fn connect_discord() -> Client {
 }
 
 #[deprecated]
-pub fn sample_users<W: Write>(connection: &SqliteConnection, w: &mut W) {
+pub fn sample_users(connection: &SqliteConnection) -> String {
     use db::schema::users::dsl::*;
+
+    let mut w: Vec<u8> = Vec::new();
 
     let results = users
         .limit(5)
@@ -86,11 +88,15 @@ pub fn sample_users<W: Write>(connection: &SqliteConnection, w: &mut W) {
     }
 
     writeln!(w, "{}", table).unwrap();
+
+    return String::from_utf8_lossy(&w).into_owned();
 }
 
 #[deprecated]
-pub fn sample_classes<W: Write>(connection: &SqliteConnection, w: &mut W) {
+pub fn sample_classes(connection: &SqliteConnection) -> String {
     use db::schema::classes::dsl::*;
+
+    let mut w: Vec<u8> = Vec::new();
 
     let results = classes
         .limit(5)
@@ -105,6 +111,8 @@ pub fn sample_classes<W: Write>(connection: &SqliteConnection, w: &mut W) {
     )
     .unwrap();
     writeln!(w, "{}", table_classes(results)).unwrap();
+
+    return String::from_utf8_lossy(&w).into_owned();
 }
 
 fn table_classes(classes: Vec<DatabaseClass>) -> prettytable::Table {

@@ -1,9 +1,5 @@
 use crate::SqliteDatabaseConnection;
-use serenity::framework::standard::{
-    macros::{command},
-    CommandResult,
-    Args
-};
+use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::{channel::Message, id::UserId};
 use serenity::prelude::*;
 use std::io::Write;
@@ -22,19 +18,22 @@ pub fn classes(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResul
 
     let mut temp = Vec::from("```rs\n".as_bytes());
 
-    crate::sample_classes(
-        &data
-            .get::<SqliteDatabaseConnection>()
-            .unwrap()
-            .lock()
-            .unwrap(),
-        &mut temp,
-    );
-
     (&mut temp).write("```".as_bytes()).unwrap();
 
     msg.channel_id
-        .say(&ctx.http, std::str::from_utf8(&temp).unwrap())
+        .say(
+            &ctx.http,
+            format!(
+                "```\n{}```",
+                crate::sample_classes(
+                    &data
+                        .get::<SqliteDatabaseConnection>()
+                        .unwrap()
+                        .lock()
+                        .unwrap()
+                )
+            ),
+        )
         .unwrap();
 
     Ok(())

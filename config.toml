@@ -1,9 +1,9 @@
 [bot] # Configuration for the bot
 prefix = "!"
+owner = 168827261682843648 # DusterTheFirst
 
 [server] # Configuration for the server
 id = 609141661884481543 # Server ID
-owner = 168827261682843648 # DusterTheFirst
 admin_roles = [
     609146598756319292, # Administrative Helper
     609146291389464577 # Admin

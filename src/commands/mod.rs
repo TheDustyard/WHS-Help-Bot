@@ -13,7 +13,7 @@ pub mod classes;
 pub mod users;
 
 use classes::CLASSES_COMMAND;
-use users::USERS_COMMAND;
+use users::{REGISTER_COMMAND, USERS_COMMAND};
 
 #[help]
 fn help_command(
@@ -40,7 +40,7 @@ group!({
     options: {
         description: "User management commands"
     },
-    commands: [users, classes],
+    commands: [users, classes, register],
 });
 
 // TODO: error checks, shid like that
