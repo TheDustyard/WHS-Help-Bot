@@ -1,4 +1,4 @@
-use crate::SqliteDatabaseConnection;
+use crate::bot_data::SqliteDatabaseConnection;
 use serenity::framework::standard::{macros::command, Args, CommandResult};
 use serenity::model::{channel::Message, id::UserId};
 use serenity::prelude::*;
@@ -12,7 +12,7 @@ pub fn classes(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResul
     // TODO: work for single class
     if let Ok(user) = args.single::<UserId>() {
         msg.channel_id
-            .say(&ctx.http, format!("{:?}", user))
+            .say(&ctx, format!("{:?}", user))
             .unwrap();
     }
 
@@ -22,7 +22,7 @@ pub fn classes(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResul
 
     msg.channel_id
         .say(
-            &ctx.http,
+            &ctx,
             format!(
                 "```\n{}```",
                 crate::sample_classes(

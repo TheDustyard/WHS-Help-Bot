@@ -1,17 +1,20 @@
+use diesel::deserialize::{self, FromSql};
 use diesel::prelude::*;
+use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sqlite::SqliteConnection;
 use serenity::model::id::{RoleId, UserId};
 use serenity::model::misc::{RoleIdParseError, UserIdParseError};
+use std::io::Write;
 use uuid::{parser::ParseError, Uuid};
 
 #[derive(Queryable, Debug)]
 pub struct DatabaseUser {
     /// The discord ID of the user
-    id: String,
+    pub id: String,
     /// The users display name
     pub name: String,
     /// The ids of the classes that the user is in seperated by commas
-    classes: String,
+    pub classes: String,
 }
 
 impl DatabaseUser {
@@ -22,12 +25,18 @@ impl DatabaseUser {
             .collect()
     }
 
-    pub fn get_classes(&self, connection: &SqliteConnection) -> QueryResult<Vec<DatabaseClass>> {
+    pub fn get_classes(&self, connection: &SqliteConnection) -> Vec<Result<DatabaseClass, &str>> {
         use crate::db::schema::classes::dsl::*;
 
         self.classes
             .split(",")
-            .map(|x| classes.find(x).first(connection))
+            .filter(|x| x.len() > 0)
+            .map(
+                |x| match classes.find(x).first::<DatabaseClass>(connection) {
+                    Ok(class) => Ok(class),
+                    Err(_) => Err(x),
+                },
+            )
             .collect()
     }
 
@@ -47,10 +56,19 @@ pub struct DatabaseClass {
 }
 
 impl DatabaseClass {
+    /// Parse the id of the class
+    ///
+    /// ## Panics
+    /// If the uuid is malformed
+    /// (Should never happen unless a fatal
+    /// user error or breaking change in UUID lib)
     pub fn get_id(&self) -> Uuid {
-        Uuid::parse_str(&self.id).expect("Malformed class id")
+        Uuid::parse_str(&self.id).expect("Attempted to get a malformatted uuid")
     }
 
+    /// Parse the role of the class
+    /// 
+    /// ## Panics
     pub fn get_role(&self) -> Result<RoleId, RoleIdParseError> {
         self.role.parse::<RoleId>()
     }

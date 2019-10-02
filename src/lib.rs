@@ -5,16 +5,20 @@ use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use prettytable::Table;
 use serenity::client::Client;
+use serenity::model::{
+    gateway::{Ready, Activity},
+    user::{OnlineStatus},
+};
 use serenity::prelude::*;
 use std::env;
 use std::fs;
 use std::io::Write;
-use std::sync::{Arc, Mutex};
 
 use prettytable::{cell, row};
 
 use crate::db::models::{DatabaseClass, DatabaseUser};
 
+pub mod bot_data;
 pub mod commands;
 pub mod config;
 pub mod db;
@@ -34,13 +38,10 @@ pub fn establish_connection() -> SqliteConnection {
 // TODO: MOVE
 struct Handler;
 
-impl EventHandler for Handler {}
-
-// TODO: ^^
-pub struct SqliteDatabaseConnection;
-
-impl TypeMapKey for SqliteDatabaseConnection {
-    type Value = Arc<Mutex<SqliteConnection>>;
+impl EventHandler for Handler {
+    fn ready(&self, ctx: Context, _data_about_bot: Ready) {
+        ctx.set_presence(Some(Activity::listening("!help")), OnlineStatus::Online);
+    }
 }
 
 pub fn connect_discord() -> Client {
@@ -79,9 +80,11 @@ pub fn sample_users(connection: &SqliteConnection) -> String {
             format!(
                 "{:?}",
                 user.get_classes(connection)
-                    .unwrap()
                     .iter()
-                    .map(|x| x.name.clone())
+                    .map(|x| match x {
+                        Ok(x) => x.name.clone(),
+                        Err(x) => format!("ERR: {}", x)
+                    })
                     .collect::<Vec<String>>()
             )
         ]);
@@ -121,7 +124,10 @@ fn table_classes(classes: Vec<DatabaseClass>) -> prettytable::Table {
 
     for class in classes {
         table.add_row(row![
-            class.get_id().to_string()[0..8],
+            match class.get_id() {
+                Ok(x) => x.to_string()[0..8].to_owned(),
+                Err(e) => format!("ERR: {}", e)
+            },
             class.name,
             format!("{:?}", class.get_role())
         ]);

@@ -4,7 +4,11 @@ extern crate diesel_migrations;
 use serenity::framework::standard::{DispatchError, StandardFramework};
 use std::sync::{Arc, Mutex};
 
-use lib::*;
+use lib::bot_data::{BotConfig, SqliteDatabaseConnection};
+use lib::{
+    commands, connect_discord, establish_connection, load_config, load_environment, sample_classes,
+    sample_users,
+};
 
 embed_migrations!("./migrations");
 
@@ -35,17 +39,38 @@ fn main() {
             .help(&commands::HELP_COMMAND) // Help
             .group(&commands::GENERAL_GROUP)
             .group(&commands::MANAGEMENT_GROUP)
+            .group(&commands::ADMIN_GROUP)
             .on_dispatch_error(|context, msg, error| match error {
                 DispatchError::NotEnoughArguments { min, given } => {
                     let s = format!("Need {} arguments, but only got {}.", min, given);
 
-                    let _ = msg.channel_id.say(&context.http, &s);
+                    let _ = msg.channel_id.say(&context, &s);
                 }
                 DispatchError::TooManyArguments { max, given } => {
                     let s = format!("Max arguments allowed is {}, but got {}.", max, given);
 
-                    let _ = msg.channel_id.say(&context.http, &s);
-                }
+                    let _ = msg.channel_id.say(&context, &s);
+                },
+                DispatchError::CheckFailed(s, _) => {
+                    let s = format!("You cannot run this command, the `{}` check failed.", s);
+
+                    let _ = msg.channel_id.say(&context, &s);
+                },
+                DispatchError::LackingPermissions(p) => {
+                    let s = format!("You are lacking the `{:?}` permission(s).", p);
+
+                    let _ = msg.channel_id.say(&context, &s);
+                },
+                DispatchError::OnlyForDM => {
+                    let s = format!("This command can only be run in DMs");
+
+                    let _ = msg.channel_id.say(&context, &s);
+                },
+                DispatchError::OnlyForGuilds => {
+                    let s = format!("This command can only be run in guilds.");
+
+                    let _ = msg.channel_id.say(&context, &s);
+                },
                 _ => println!("Unhandled dispatch error."),
             })
             .after(|ctx, msg, cmd_name, error| {
@@ -53,17 +78,11 @@ fn main() {
                 if let Err(why) = error {
                     println!("Error in {}: {:?}", cmd_name, why);
                     msg.channel_id
-                        .say(&ctx.http, format!("Error in {}: {:?}", cmd_name, why))
+                        .say(&ctx, format!("Error in {}: {:?}", cmd_name, why))
                         .unwrap();
                 }
             }),
     );
-
-    // Persist database connection
-    {
-        let mut data = client.data.write();
-        data.insert::<SqliteDatabaseConnection>(Arc::new(Mutex::new(connection)));
-    }
 
     println!(
         "Starting bot {:?} with prefix {} and owner {:?}",
@@ -77,6 +96,13 @@ fn main() {
         config.bot.prefix,
         config.bot.owner
     );
+
+    // Persist database connection and config
+    {
+        let mut data = client.data.write();
+        data.insert::<SqliteDatabaseConnection>(Arc::new(Mutex::new(connection)));
+        data.insert::<BotConfig>(config);
+    }
 
     // start listening for events by starting a single shard
     if let Err(why) = client.start() {
