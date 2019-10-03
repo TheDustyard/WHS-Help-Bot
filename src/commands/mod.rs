@@ -11,11 +11,13 @@ use std::collections::HashSet;
 
 pub mod classes;
 pub mod users;
+pub mod register;
 pub mod errors;
 
-use classes::CLASSES_COMMAND;
+pub use classes::CLASS_GROUP;
 use errors::ERRORS_COMMAND;
-use users::{REGISTER_COMMAND, USERS_COMMAND};
+pub use users::USER_GROUP;
+pub use register::REGISTER_COMMAND;
 use crate::config::StaticConfiguration;
 use crate::bot_data::BotConfig;
 
@@ -44,7 +46,7 @@ group!({
     options: {
         description: "User management commands"
     },
-    commands: [users, classes, register],
+    commands: [register],
 });
 
 group!({

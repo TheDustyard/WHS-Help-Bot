@@ -9,7 +9,7 @@ use std::fmt::Write;
 
 #[command]
 #[description = "Check for errors and problems with the user listing."]
-#[usage = "[filter]"]
+// #[usage = "[filter]"]
 #[only_in(guilds)]
 fn errors(ctx: &mut Context, msg: &Message) -> CommandResult {
     use crate::db::schema::{classes, users};

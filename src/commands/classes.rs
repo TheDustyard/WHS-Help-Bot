@@ -4,17 +4,29 @@ use crate::db::models::DatabaseClass;
 use crate::db::schema::classes as database_classes;
 use diesel::prelude::*;
 use prettytable::{cell, row, Table};
-use serenity::framework::standard::{macros::command, Args, CommandError, CommandResult};
-use serenity::model::channel::Message;
+use serenity::framework::standard::{
+    macros::{command, group},
+    Args, CommandError, CommandResult,
+};
+use serenity::model::{channel::Message, id::RoleId};
 use serenity::prelude::*;
 use std::fmt::Write;
+
+group!({
+    name: "Class",
+    options: {
+        description: "Class management commands",
+        prefixes: ["classes", "c"],
+        default_command: list,
+        checks: [Admin]
+    },
+    commands: [list, add],
+});
 
 #[command]
 #[description = "List the classes."]
 #[usage = "[filter]"]
-#[checks(Admin)]
-#[sub_commands(add, /* remove, edit */)]
-pub fn classes(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let data = ctx.data.read();
 
     let db: &SqliteConnection = &data
@@ -40,8 +52,14 @@ pub fn classes(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         };
 
         match filter {
-            Some(f) => writeln!(output, "# Displaying {} classes with filter `{}`", classes.len(), f).unwrap(),
-            None => writeln!(output, "# Displaying {} classes", classes.len()).unwrap()
+            Some(f) => writeln!(
+                output,
+                "# Displaying {} classes with filter `{}`",
+                classes.len(),
+                f
+            )
+            .unwrap(),
+            None => writeln!(output, "# Displaying {} classes", classes.len()).unwrap(),
         };
 
         let mut table = Table::new();
@@ -74,6 +92,19 @@ pub fn classes(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
 #[command]
 #[description = "Manually add a class."]
-fn add() -> CommandResult {
-    Err(CommandError("Unimplemented".to_owned()))
+#[usage = "<name> [role id]"]
+#[example = "\"Honors History\" 609773945796821022 "]
+fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+    let name = args.single_quoted::<String>();
+    let id = args.single::<RoleId>();
+
+    if let Err(_) = name {
+        msg.channel_id.say(&ctx, "You must pass a name for the class")?;
+
+        return Ok(());
+    }
+
+    msg.channel_id.say(&ctx, format!("{:?}, {:?}", name, id))?;
+
+    Ok(())
 }

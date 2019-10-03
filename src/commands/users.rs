@@ -1,12 +1,22 @@
 use crate::bot_data::SqliteDatabaseConnection;
-use serenity::framework::standard::{macros::command, CommandError, CommandResult};
+use serenity::framework::standard::{macros::{command, group}, CommandError, CommandResult};
 use serenity::model::channel::Message;
 use serenity::prelude::*;
 
+group!({
+    name: "User",
+    options: {
+        description: "User management commands",
+        prefixes: ["users", "u"],
+        default_command: list
+    },
+    commands: [list, add],
+});
+
 #[command]
 #[description = "List the users."]
-#[sub_commands(add)]
-pub fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
+#[usage = "list"]
+fn list(ctx: &mut Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read();
 
     msg.channel_id.say(
@@ -24,12 +34,6 @@ pub fn users(ctx: &mut Context, msg: &Message) -> CommandResult {
     )?;
 
     Ok(())
-}
-
-#[command]
-#[description = "Register yourself"]
-pub fn register() -> CommandResult {
-    Err(CommandError("Unimplemented".to_owned()))
 }
 
 #[command]
