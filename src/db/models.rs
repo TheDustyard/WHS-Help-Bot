@@ -1,11 +1,7 @@
-use diesel::deserialize::{self, FromSql};
 use diesel::prelude::*;
-use diesel::serialize::{self, IsNull, Output, ToSql};
 use diesel::sqlite::SqliteConnection;
 use serenity::model::id::{RoleId, UserId};
-use serenity::model::misc::{RoleIdParseError, UserIdParseError};
-use std::io::Write;
-use uuid::{parser::ParseError, Uuid};
+use uuid::Uuid;
 
 #[derive(Queryable, Debug)]
 pub struct DatabaseUser {
@@ -18,41 +14,88 @@ pub struct DatabaseUser {
 }
 
 impl DatabaseUser {
-    pub fn get_classes_ids(&self) -> Result<Vec<Uuid>, ParseError> {
+    /// Parse the id of the classes
+    ///
+    /// ## Panics
+    /// If the class ids are malformed
+    /// (Should never happen unless a
+    /// breaking change in storage of classes)
+    pub fn parse_classes_ids(&self) -> Vec<Uuid> {
         self.classes
             .split(",")
+            .filter(|x| x.len() > 0)
             .map(|x| Uuid::parse_str(x))
-            .collect()
+            .collect::<Result<Vec<_>, _>>()
+            .expect("Attempted to parse malformed class id list")
     }
 
-    pub fn get_classes(&self, connection: &SqliteConnection) -> Vec<Result<DatabaseClass, &str>> {
+    /// Get the classes that the user is in
+    ///
+    /// ## Panics
+    /// If the class ids are malformed
+    /// (Should never happen unless a
+    /// breaking change in storage of classes
+    /// or a deleted class was improperly purged)
+    pub fn parse_classes(&self, connection: &SqliteConnection) -> Vec<DatabaseClass> {
         use crate::db::schema::classes::dsl::*;
 
         self.classes
             .split(",")
             .filter(|x| x.len() > 0)
-            .map(
-                |x| match classes.find(x).first::<DatabaseClass>(connection) {
-                    Ok(class) => Ok(class),
-                    Err(_) => Err(x),
-                },
-            )
-            .collect()
+            .map(|x| classes.find(x).first::<DatabaseClass>(connection))
+            .collect::<Result<Vec<_>, _>>()
+            .expect("Attempted to parse malformed or orphaned class id list")
     }
 
-    pub fn get_id(&self) -> Result<UserId, UserIdParseError> {
-        self.id.parse::<UserId>()
+    /// Sets the classes the user is in
+    ///
+    /// ## Panics
+    /// If the class ids are malformed
+    /// (Should never happen unless a
+    /// breaking change in storage of classes
+    /// or a deleted class was improperly purged)
+    fn set_classes(&mut self, classes: Vec<DatabaseClass>) {
+        self.classes = classes.into_iter().map(|x| x.id).collect::<Vec<_>>().join(",");
+    }
+
+    /// Remove a class from a user
+    ///
+    /// ## Panics
+    /// If the class ids are malformed
+    /// (Should never happen unless a
+    /// breaking change in storage of classes
+    /// or a deleted class was improperly purged)
+    pub fn remove_class(&mut self, connection: &SqliteConnection, class: DatabaseClass) -> Option<usize> {
+        let mut classes = self.parse_classes(connection);
+        let class_pos = classes.iter().position(|x| x.parse_id() == class.parse_id())?;
+
+        classes.swap_remove(class_pos);
+
+        self.set_classes(classes);
+
+        Some(class_pos)
+    }
+
+    /// Parse the id of the user
+    ///
+    /// ## Panics
+    /// If the UserId is malformed
+    /// (Should never happen)
+    pub fn parse_id(&self) -> UserId {
+        self.id
+            .parse::<UserId>()
+            .expect("Attempted to parse a malformed UserId")
     }
 }
 
 #[derive(Queryable, Debug)]
 pub struct DatabaseClass {
     /// The uuid of the class
-    id: String,
+    pub id: String,
     /// The class name
     pub name: String,
     /// The role to use to display the class
-    role: String,
+    pub role: String,
 }
 
 impl DatabaseClass {
@@ -62,14 +105,18 @@ impl DatabaseClass {
     /// If the uuid is malformed
     /// (Should never happen unless a fatal
     /// user error or breaking change in UUID lib)
-    pub fn get_id(&self) -> Uuid {
-        Uuid::parse_str(&self.id).expect("Attempted to get a malformatted uuid")
+    pub fn parse_id(&self) -> Uuid {
+        Uuid::parse_str(&self.id).expect("Attempted to parse a malformed Uuid")
     }
 
     /// Parse the role of the class
-    /// 
+    ///
     /// ## Panics
-    pub fn get_role(&self) -> Result<RoleId, RoleIdParseError> {
-        self.role.parse::<RoleId>()
+    /// If the RoleId is malformed
+    /// (Should never happen)
+    pub fn parse_role(&self) -> RoleId {
+        self.role
+            .parse::<RoleId>()
+            .expect("Attempted to parse a malformed RoleID")
     }
 }

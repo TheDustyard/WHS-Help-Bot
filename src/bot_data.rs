@@ -1,7 +1,9 @@
-use std::sync::{Arc, Mutex};
+//! The TypeMapKeys that are stored in the bot data
+
 use crate::config::StaticConfiguration;
 use diesel::sqlite::SqliteConnection;
 use serenity::prelude::TypeMapKey;
+use std::sync::{Arc, Mutex};
 
 pub struct SqliteDatabaseConnection;
 

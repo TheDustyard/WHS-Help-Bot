@@ -6,8 +6,7 @@ use std::sync::{Arc, Mutex};
 
 use lib::bot_data::{BotConfig, SqliteDatabaseConnection};
 use lib::{
-    commands, connect_discord, establish_connection, load_config, load_environment, sample_classes,
-    sample_users,
+    commands, connect_discord, establish_connection, load_config, load_environment
 };
 
 embed_migrations!("./migrations");
@@ -22,12 +21,12 @@ fn main() {
     // should call embedded_migrations::run_with_output.
     embedded_migrations::run_with_output(&connection, &mut std::io::stdout()).unwrap();
 
-    println!("{}", sample_users(&connection));
-    println!("{}", sample_classes(&connection));
+    // println!("{}", sample_users(&connection));
+    // println!("{}", sample_classes(&connection));
 
     let config = load_config().unwrap();
 
-    println!("{:#?}", config);
+    // println!("{:#?}", config);
 
     let mut client = connect_discord();
     client.with_framework(

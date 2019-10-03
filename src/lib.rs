@@ -3,18 +3,16 @@ extern crate diesel;
 
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
-use prettytable::Table;
+use prettytable::{cell, row, Table};
 use serenity::client::Client;
 use serenity::model::{
-    gateway::{Ready, Activity},
-    user::{OnlineStatus},
+    gateway::{Activity, Ready},
+    user::OnlineStatus,
 };
 use serenity::prelude::*;
 use std::env;
 use std::fs;
 use std::io::Write;
-
-use prettytable::{cell, row};
 
 use crate::db::models::{DatabaseClass, DatabaseUser};
 
@@ -50,7 +48,7 @@ pub fn connect_discord() -> Client {
     Client::new(&token, Handler).expect("Error creating client")
 }
 
-#[deprecated]
+#[deprecated] // FIXME:
 pub fn sample_users(connection: &SqliteConnection) -> String {
     use db::schema::users::dsl::*;
 
@@ -75,18 +73,9 @@ pub fn sample_users(connection: &SqliteConnection) -> String {
 
     for user in results {
         table.add_row(row![
-            format!("{:?}", user.get_id()),
+            format!("{:?}", user.parse_id()),
             user.name,
-            format!(
-                "{:?}",
-                user.get_classes(connection)
-                    .iter()
-                    .map(|x| match x {
-                        Ok(x) => x.name.clone(),
-                        Err(x) => format!("ERR: {}", x)
-                    })
-                    .collect::<Vec<String>>()
-            )
+            format!("{:?}", table_classes(user.parse_classes(connection)))
         ]);
     }
 
@@ -95,7 +84,7 @@ pub fn sample_users(connection: &SqliteConnection) -> String {
     return String::from_utf8_lossy(&w).into_owned();
 }
 
-#[deprecated]
+#[deprecated] // FIXME:
 pub fn sample_classes(connection: &SqliteConnection) -> String {
     use db::schema::classes::dsl::*;
 
@@ -123,14 +112,7 @@ fn table_classes(classes: Vec<DatabaseClass>) -> prettytable::Table {
     table.add_row(row!["UUID", "NAME", "ROLE ID"]);
 
     for class in classes {
-        table.add_row(row![
-            match class.get_id() {
-                Ok(x) => x.to_string()[0..8].to_owned(),
-                Err(e) => format!("ERR: {}", e)
-            },
-            class.name,
-            format!("{:?}", class.get_role())
-        ]);
+        table.add_row(row![class.parse_id(), class.name, class.parse_role().0]);
     }
 
     table

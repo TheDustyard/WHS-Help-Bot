@@ -25,6 +25,8 @@ pub struct RolesConfig {
     pub auto_assign: Vec<RoleId>,
     /// The role to designate that a user has joined the server
     pub joined: RoleId,
+    /// The role that testers have (To save the bot effort during testing)
+    pub tester: RoleId,
 }
 
 #[derive(Deserialize, Debug)]
