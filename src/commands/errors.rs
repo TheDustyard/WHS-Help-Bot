@@ -45,7 +45,7 @@ fn errors(ctx: &mut Context, msg: &Message) -> CommandResult {
 
         match msg.guild_id.unwrap().member(&ctx, userid) {
             Ok(member) => {
-                username.get_or_insert(member.user.read().tag());
+                username.get_or_insert_with(|| member.user.read().tag());
                 for class in dbuser.parse_classes(db) {
                     let role = class.parse_role();
 
@@ -53,7 +53,7 @@ fn errors(ctx: &mut Context, msg: &Message) -> CommandResult {
                         let role_name = role
                             .to_role_cached(&ctx)
                             .map(|r| r.name)
-                            .unwrap_or(role.to_string());
+                            .unwrap_or_else(|| role.to_string());
 
                         if role_name == class.name {
                             writeln!(
@@ -86,7 +86,7 @@ fn errors(ctx: &mut Context, msg: &Message) -> CommandResult {
             writeln!(
                 output,
                 "# {}\n{}",
-                username.unwrap_or(userid.to_string()),
+                username.unwrap_or_else(|| userid.to_string()),
                 user_errors
             )
             .unwrap();

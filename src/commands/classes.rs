@@ -1,4 +1,4 @@
-use crate::bot_data::SqliteDatabaseConnection;
+use crate::bot_data::{BotConfig, SqliteDatabaseConnection};
 use crate::commands::ADMIN_CHECK;
 use crate::db::models::DatabaseClass;
 use crate::db::schema::classes as database_classes;
@@ -6,7 +6,7 @@ use diesel::prelude::*;
 use prettytable::{cell, row, Table};
 use serenity::framework::standard::{
     macros::{command, group},
-    Args, CommandError, CommandResult,
+    ArgError, Args, CommandError, CommandResult,
 };
 use serenity::model::{channel::Message, id::RoleId};
 use serenity::prelude::*;
@@ -76,7 +76,7 @@ pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                     } else {
                         format!("{} ({})", class.role, r.name)
                     })
-                    .unwrap_or(format!("! {}", class.role)),
+                    .unwrap_or_else(|| format!("! {}", class.role)),
             ]);
         }
 
@@ -95,13 +95,45 @@ pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 #[usage = "<name> [role id]"]
 #[example = "\"Honors History\" 609773945796821022 "]
 fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+    let data = ctx.data.read();
+    let db: &SqliteConnection = &data
+        .get::<SqliteDatabaseConnection>()
+        .unwrap()
+        .lock()
+        .unwrap();
+    let config = &data.get::<BotConfig>().unwrap();
+
+    let usage = format!(
+        "Usage: `{}classes add {}`",
+        config.bot.prefix,
+        ADD_COMMAND_OPTIONS.usage.unwrap()
+    );
+
+    if args.remaining() == 0 {
+        msg.channel_id
+            .say(&ctx, format!("Too few arguments\n{}", usage))?;
+
+        return Ok(());
+    }
+
     let name = args.single_quoted::<String>();
     let id = args.single::<RoleId>();
 
-    if let Err(_) = name {
-        msg.channel_id.say(&ctx, "You must pass a name for the class")?;
-
+    if name.is_err() {
+        msg.channel_id
+            .say(&ctx, format!("Malformed name argument\n{}", usage))?;
         return Ok(());
+    }
+    if let Err(e) = &id {
+        match e {
+            ArgError::Parse(e) => {
+                msg.channel_id
+                    .say(&ctx, format!("Malformed role id: `{:?}`\n{}", e, usage))?;
+
+                return Ok(());
+            }
+            _ => {}
+        }
     }
 
     msg.channel_id.say(&ctx, format!("{:?}, {:?}", name, id))?;
