@@ -109,10 +109,10 @@ pub fn sample_classes(connection: &SqliteConnection) -> String {
 
 fn table_classes(classes: Vec<DatabaseClass>) -> prettytable::Table {
     let mut table = Table::new();
-    table.add_row(row!["UUID", "NAME", "ROLE ID"]);
+    table.add_row(row!["ID", "NAME"]);
 
     for class in classes {
-        table.add_row(row![class.parse_id(), class.name, class.parse_role().0]);
+        table.add_row(row![class.parse_role_id(), class.name]);
     }
 
     table

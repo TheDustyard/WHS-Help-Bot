@@ -1,9 +1,10 @@
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use serenity::model::id::{RoleId, UserId};
-use uuid::Uuid;
+use crate::db::schema::*;
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Insertable, Debug)]
+#[table_name = "users"]
 pub struct DatabaseUser {
     /// The discord ID of the user
     pub id: String,
@@ -20,13 +21,13 @@ impl DatabaseUser {
     /// If the class ids are malformed
     /// (Should never happen unless a
     /// breaking change in storage of classes)
-    pub fn parse_classes_ids(&self) -> Vec<Uuid> {
+    pub fn parse_classes_ids(&self) -> Vec<RoleId> {
         self.classes
             .split(",")
             .filter(|x| x.len() > 0)
-            .map(|x| Uuid::parse_str(x))
+            .map(|x| x.parse::<RoleId>())
             .collect::<Result<Vec<_>, _>>()
-            .expect("Attempted to parse malformed class id list")
+            .expect("Attempted to parse malformed role list")
     }
 
     /// Get the classes that the user is in
@@ -55,7 +56,11 @@ impl DatabaseUser {
     /// breaking change in storage of classes
     /// or a deleted class was improperly purged)
     fn set_classes(&mut self, classes: Vec<DatabaseClass>) {
-        self.classes = classes.into_iter().map(|x| x.id).collect::<Vec<_>>().join(",");
+        self.classes = classes
+            .into_iter()
+            .map(|x| x.id)
+            .collect::<Vec<_>>()
+            .join(",");
     }
 
     /// Remove a class from a user
@@ -65,9 +70,15 @@ impl DatabaseUser {
     /// (Should never happen unless a
     /// breaking change in storage of classes
     /// or a deleted class was improperly purged)
-    pub fn remove_class(&mut self, connection: &SqliteConnection, class: DatabaseClass) -> Option<usize> {
+    pub fn remove_class(
+        &mut self,
+        connection: &SqliteConnection,
+        class: DatabaseClass,
+    ) -> Option<usize> {
         let mut classes = self.parse_classes(connection);
-        let class_pos = classes.iter().position(|x| x.parse_id() == class.parse_id())?;
+        let class_pos = classes
+            .iter()
+            .position(|x| x.parse_role_id() == class.parse_role_id())?;
 
         classes.swap_remove(class_pos);
 
@@ -88,34 +99,23 @@ impl DatabaseUser {
     }
 }
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Insertable, Debug)]
+#[table_name = "classes"]
 pub struct DatabaseClass {
-    /// The uuid of the class
+    /// The id of the role to use to display the class
     pub id: String,
     /// The class name
     pub name: String,
-    /// The role to use to display the class
-    pub role: String,
 }
 
 impl DatabaseClass {
-    /// Parse the id of the class
-    ///
-    /// ## Panics
-    /// If the uuid is malformed
-    /// (Should never happen unless a fatal
-    /// user error or breaking change in UUID lib)
-    pub fn parse_id(&self) -> Uuid {
-        Uuid::parse_str(&self.id).expect("Attempted to parse a malformed Uuid")
-    }
-
     /// Parse the role of the class
     ///
     /// ## Panics
     /// If the RoleId is malformed
     /// (Should never happen)
-    pub fn parse_role(&self) -> RoleId {
-        self.role
+    pub fn parse_role_id(&self) -> RoleId {
+        self.id
             .parse::<RoleId>()
             .expect("Attempted to parse a malformed RoleID")
     }

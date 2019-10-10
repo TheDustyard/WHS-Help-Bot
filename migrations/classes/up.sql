@@ -1,5 +1,4 @@
 CREATE TABLE classes (
     id TEXT PRIMARY KEY NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL
+    name TEXT NOT NULL
 )

@@ -1,12 +1,13 @@
 use crate::bot_data::{BotConfig, SqliteDatabaseConnection};
 use crate::commands::ADMIN_CHECK;
+use crate::config::StaticConfiguration;
 use crate::db::models::DatabaseClass;
 use crate::db::schema::classes as database_classes;
 use diesel::prelude::*;
 use prettytable::{cell, row, Table};
 use serenity::framework::standard::{
     macros::{command, group},
-    ArgError, Args, CommandError, CommandResult,
+    ArgError, Args, CommandResult,
 };
 use serenity::model::{channel::Message, id::RoleId};
 use serenity::prelude::*;
@@ -69,14 +70,14 @@ pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
             table.add_row(row![
                 class.name,
                 class
-                    .parse_role()
+                    .parse_role_id()
                     .to_role_cached(&ctx)
                     .map(|r| if class.name == r.name {
-                        format!("{}", class.role)
+                        format!("{}", class.id)
                     } else {
-                        format!("{} ({})", class.role, r.name)
+                        format!("{} ({})", class.id, r.name)
                     })
-                    .unwrap_or_else(|| format!("! {}", class.role)),
+                    .unwrap_or_else(|| format!("(NONEXISTANT) {}", class.id)),
             ]);
         }
 
@@ -101,7 +102,7 @@ fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         .unwrap()
         .lock()
         .unwrap();
-    let config = &data.get::<BotConfig>().unwrap();
+    let config: &StaticConfiguration = &data.get::<BotConfig>().unwrap();
 
     let usage = format!(
         "Usage: `{}classes add {}`",
@@ -136,7 +137,95 @@ fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     }
 
-    msg.channel_id.say(&ctx, format!("{:?}, {:?}", name, id))?;
+    let name = name.unwrap();
+
+    if id.is_err() {
+        let role_result = config
+            .server
+            .id
+            .create_role(&ctx, |r| r.hoist(true).mentionable(true).name(&name));
+        match role_result {
+            Ok(mut r) => {
+                let classes_result = diesel::insert_or_ignore_into(database_classes::table)
+                    .values(DatabaseClass {
+                        id: r.id.to_string(),
+                        name: name.clone(),
+                    })
+                    .execute(db);
+
+                match classes_result {
+                    Ok(_) => {
+                        msg.channel_id.say(
+                            &ctx,
+                            format!(
+                                "Created a new Discord role {mention} for the class {classname}\nTo edit this class use `!classes edit {id}`\nTo delete this class use `!classes delete {id}`\nOr, you can just mention the role if that is easier",
+                                mention=r.mention(), id=r.id, classname=name
+                            ),
+                        )?;
+                    }
+                    // UNWIND
+                    Err(e) => {
+                        msg.channel_id
+                            .say(&ctx, format!("Error saving class: {}", e))?;
+                        match r.delete(&ctx) {
+                            Ok(_) => {}
+                            Err(e) => {
+                                msg.channel_id
+                                    .say(&ctx, format!("Error deleting role: {}", e))?;
+                            }
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                msg.channel_id.say(&ctx, format!("{:?}", e))?;
+            }
+        };
+    } else {
+        let id = id.unwrap();
+        match id.to_role_cached(&ctx) {
+            None => {
+                msg.channel_id.say(
+                    &ctx,
+                    format!(
+                        "Could not create class `{}`. No role with the ID `{}` exists",
+                        name, id
+                    ),
+                )?;
+            }
+            Some(role) => {
+                let classes_result = diesel::insert_into(database_classes::table)
+                    .values(DatabaseClass {
+                        id: role.id.to_string(),
+                        name: name.clone(),
+                    })
+                    .execute(db);
+
+                match classes_result {
+                    Ok(_) => {
+                        msg.channel_id.say(
+                            &ctx,
+                            format!(
+                                "Added existing Discord role {mention} to the class {classname}\nTo edit this class use `!classes edit {id}`\nTo delete this class use `!classes delete {id}`\nOr, you can just mention the role if that is easier",
+                                mention=role.mention(), id=role.id, classname=name
+                            ),
+                        )?;
+                    }
+                    Err(e) => {
+                        use diesel::result::{Error, DatabaseErrorKind};
+                        match e {
+                            Error::DatabaseError(DatabaseErrorKind::UniqueViolation, _) => {
+                                msg.channel_id.say(&ctx, "A class already exists with that ID")?;
+                            },
+                            _ => {
+                                msg.channel_id.say(&ctx, format!("Error saving class: {}", e))?;
+                            }
+                        };
+                    }
+                }
+            }
+        }
+    }
 
     Ok(())
 }

@@ -47,7 +47,7 @@ fn errors(ctx: &mut Context, msg: &Message) -> CommandResult {
             Ok(member) => {
                 username.get_or_insert_with(|| member.user.read().tag());
                 for class in dbuser.parse_classes(db) {
-                    let role = class.parse_role();
+                    let role = class.parse_role_id();
 
                     if !member.roles.iter().any(|r| r == &role) {
                         let role_name = role
@@ -101,9 +101,9 @@ fn errors(ctx: &mut Context, msg: &Message) -> CommandResult {
     for class in classesresults.iter() {
         let mut class_errors = String::new();
 
-        match class.parse_role().to_role_cached(&ctx) {
+        match class.parse_role_id().to_role_cached(&ctx) {
             Some(_) => {},
-            None => writeln!(class_errors, "Role {} does not exist", class.role).unwrap()
+            None => writeln!(class_errors, "Role {} does not exist", class.id).unwrap()
         }
 
         if class_errors.len() > 0 {
