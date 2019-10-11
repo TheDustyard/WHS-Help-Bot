@@ -10,18 +10,13 @@ use serenity::{
 use std::collections::HashSet;
 
 pub mod classes;
-pub mod users;
-pub mod register;
-pub mod errors;
 
 pub use classes::CLASS_GROUP;
-use errors::ERRORS_COMMAND;
-pub use users::USER_GROUP;
-pub use register::REGISTER_COMMAND;
 use crate::config::StaticConfiguration;
 use crate::bot_data::BotConfig;
 
 #[help]
+#[max_levenshtein_distance(2)]
 fn help_command(
     context: &mut Context,
     msg: &Message,
@@ -34,34 +29,20 @@ fn help_command(
 }
 
 group!({
-    name: "General",
-    options: {
-        description: "General commands"
-    },
-    commands: [ping],
-});
-
-group!({
-    name: "Management",
-    options: {
-        description: "User management commands"
-    },
-    commands: [register],
-});
-
-group!({
     name: "Admin",
     options: {
         description: "Administrative commands",
         checks: [Admin],
         only_in: "guilds",
     },
-    commands: [errors],
+    commands: [say],
 });
 
 #[command]
-fn ping(ctx: &mut Context, msg: &Message) -> CommandResult {
-    msg.reply(ctx, "Pong!")?;
+#[owners_only]
+fn say(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    msg.channel_id.say(&ctx, args.rest())?;
+    msg.delete(&ctx)?;
 
     Ok(())
 }

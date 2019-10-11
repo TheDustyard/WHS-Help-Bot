@@ -1,19 +1,6 @@
 table! {
     classes (id) {
         id -> Text,
-        name -> Text,
+        tag -> Text,
     }
 }
-
-table! {
-    users (id) {
-        id -> Text,
-        name -> Text,
-        classes -> Text,
-    }
-}
-
-allow_tables_to_appear_in_same_query!(
-    classes,
-    users,
-);

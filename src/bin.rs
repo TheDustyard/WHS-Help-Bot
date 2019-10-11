@@ -36,10 +36,7 @@ fn main() {
                     .owners(vec![config.bot.owner].into_iter().collect())
             }) // set the bot's prefix to "!"
             .help(&commands::HELP_COMMAND) // Help
-            .group(&commands::GENERAL_GROUP)
-            .group(&commands::USER_GROUP)
             .group(&commands::CLASS_GROUP)
-            .group(&commands::MANAGEMENT_GROUP)
             .group(&commands::ADMIN_GROUP)
             .on_dispatch_error(|context, msg, error| match error {
                 DispatchError::NotEnoughArguments { min, given } => {
