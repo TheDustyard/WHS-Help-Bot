@@ -20,7 +20,7 @@ group!({
         prefixes: ["classes", "c", "cl"],
         default_command: list
     },
-    commands: [list, add, remove, edit, mine],
+    commands: [list, add, remove, edit, mine, join, leave],
 });
 
 #[command]
@@ -393,10 +393,24 @@ fn edit(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             "role" => {
                 let role_id = args.single::<RoleId>()?;
 
-                msg.channel_id.say(
-                    &ctx,
-                    format!("{:?} == {:?} = {}", role_id, role.id, role_id == role.id),
-                )?;
+                match diesel::update(database_classes::table.find(role.id.to_string()))
+                    .set(database_classes::id.eq(role_id.to_string()))
+                    .execute(db)
+                {
+                    Err(e) => {
+                        msg.channel_id
+                            .say(&ctx, format!("Error updating role:\n`{}`", e))?;
+                    }
+                    Ok(_) => {
+                        msg.channel_id.say(
+                            &ctx,
+                            format!(
+                                "Successfully updated role for the class `{}` to `{}`",
+                                role.name, role_id
+                            ),
+                        )?;
+                    }
+                }
             }
             "tag" => {
                 let tag = args.single_quoted::<String>()?;
@@ -447,27 +461,28 @@ pub fn mine(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         .unwrap()
         .lock()
         .unwrap();
-    let config: &StaticConfiguration = data.get::<BotConfig>().unwrap();
 
     let filter = args.remains();
 
     msg.channel_id.send_message(&ctx, |m| {
         m.embed(|e| {
-            match database_classes::table.load::<DatabaseClass>(db) {
+            match database_classes::table
+                .filter(
+                    database_classes::id.eq_any(
+                        msg.member
+                            .as_ref()
+                            .map(|x| x.roles.iter().map(|x| x.to_string()).collect::<Vec<_>>())
+                            .unwrap_or_else(|| vec![]),
+                    ),
+                )
+                .load::<DatabaseClass>(db)
+            {
                 Err(err) => {
                     e.title("Error Loading Classes");
                     e.color(Colour::DARK_RED);
                     e.description(format!("```{:#?}```", err));
                 }
                 Ok(classes) => {
-                    let classes = classes
-                        .into_iter()
-                        .filter(|x| {
-                            msg.author
-                                .has_role(&ctx, config.server.id, x.parse_role_id())
-                                .unwrap_or(false)
-                        })
-                        .collect::<Vec<_>>();
                     let classes = match filter {
                         Some(f) => {
                             let classes_len = classes.len();
@@ -500,10 +515,7 @@ pub fn mine(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
                             newclasses
                         }
                         None => {
-                            e.title(format!(
-                                "Displaying {} classes",
-                                classes.len()
-                            ));
+                            e.title(format!("Displaying {} classes", classes.len()));
                             e.footer(|footer| footer.text(format!("User: `{}`", msg.author.tag())));
 
                             classes
@@ -558,5 +570,46 @@ pub fn mine(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         m
     })?;
 
+    Ok(())
+}
+
+#[command]
+#[description = "Join a class."]
+#[usage = "<id or name>"]
+#[example = "609773945796821022"]
+#[num_args(1)]
+fn join(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
+    let data = ctx.data.read();
+
+    let db: &SqliteConnection = &data
+        .get::<SqliteDatabaseConnection>()
+        .unwrap()
+        .lock()
+        .unwrap();
+    let config: &StaticConfiguration = data.get::<BotConfig>().unwrap();
+
+    let class_id = args.single::<RoleId>();
+
+    match class_id {
+        Ok(class_id) => {
+            // match database_classes::table
+            //     .filter(database_classes::id.eq(class_id.to_string()))
+            //     .load::<DatabaseClass>(db) {}
+        }
+        Err(_) => {
+            args.rewind();
+            let class_name = args.single::<String>();
+        }
+    }
+
+    Ok(())
+}
+
+#[command]
+#[description = "Leave a class."]
+#[usage = "<id or name>"]
+#[example = "609773945796821022"]
+#[num_args(1)]
+fn leave(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     Ok(())
 }
