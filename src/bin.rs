@@ -6,7 +6,8 @@ use std::sync::{Arc, Mutex};
 
 use lib::bot_data::{BotConfig, SqliteDatabaseConnection};
 use lib::{
-    commands, connect_discord, establish_connection, load_config, load_environment
+    commands, connect_discord, establish_connection, load_config, load_environment,
+    StandardFrameworkWrapper,
 };
 
 embed_migrations!("./migrations");
@@ -30,7 +31,8 @@ fn main() {
 
     let mut client = connect_discord();
     client.with_framework(
-        StandardFramework::new()
+        StandardFrameworkWrapper::wrap(
+            StandardFramework::new()
             .configure(|c| {
                 c.prefix(&config.bot.prefix)
                     .owners(vec![config.bot.owner].into_iter().collect())
@@ -40,35 +42,45 @@ fn main() {
             .group(&commands::ADMIN_GROUP)
             .on_dispatch_error(|context, msg, error| match error {
                 DispatchError::NotEnoughArguments { min, given } => {
-                    let s = format!("Need {} arguments, but only got {}.", min, given);
-
-                    let _ = msg.channel_id.say(&context, &s);
+                    let _ = msg.channel_id.say(
+                        &context,
+                        &format!(
+                            "Needed {} arguments, but only got {} arguments. Try adding qoutation marks around arguments with a space in them.",
+                            min, given
+                        ),
+                    );
                 }
                 DispatchError::TooManyArguments { max, given } => {
-                    let s = format!("Max arguments allowed is {}, but got {}.", max, given);
-
-                    let _ = msg.channel_id.say(&context, &s);
-                },
+                    let _ = msg.channel_id.say(
+                        &context,
+                        &format!(
+                            "Max arguments allowed is {}, but got {} arguments. Try adding qoutation marks around arguments with a space in them.",
+                            max, given
+                        ),
+                    );
+                }
                 DispatchError::CheckFailed(s, _) => {
-                    let s = format!("You cannot run this command, the `{}` check failed.", s);
-
-                    let _ = msg.channel_id.say(&context, &s);
-                },
+                    let _ = msg.channel_id.say(
+                        &context,
+                        &format!("You cannot run this command, the `{}` check failed.", s),
+                    );
+                }
                 DispatchError::LackingPermissions(p) => {
-                    let s = format!("You are lacking the `{:?}` permission(s).", p);
-
-                    let _ = msg.channel_id.say(&context, &s);
-                },
+                    let _ = msg.channel_id.say(
+                        &context,
+                        &format!("You are lacking the `{:?}` permission(s).", p),
+                    );
+                }
                 DispatchError::OnlyForDM => {
-                    let s = format!("This command can only be run in DMs");
-
-                    let _ = msg.channel_id.say(&context, &s);
-                },
+                    let _ = msg
+                        .channel_id
+                        .say(&context, "This command can only be run in DMs");
+                }
                 DispatchError::OnlyForGuilds => {
-                    let s = format!("This command can only be run in guilds.");
-
-                    let _ = msg.channel_id.say(&context, &s);
-                },
+                    let _ = msg
+                        .channel_id
+                        .say(&context, "This command can only be run in guilds.");
+                }
                 _ => println!("Unhandled dispatch error."),
             })
             .after(|ctx, msg, cmd_name, error| {
@@ -79,12 +91,12 @@ fn main() {
                         .say(&ctx, format!("Error in {}: {:?}", cmd_name, why))
                         .unwrap();
                 }
-            }),
+            })
+        )
     );
 
     println!(
-        "Starting bot {:?} with prefix {} and owner {:?}",
-        // TODO: more idk
+        "Starting bot {:?} with prefix {} and owner {}",
         client
             .cache_and_http
             .http
@@ -92,7 +104,7 @@ fn main() {
             .unwrap()
             .name,
         config.bot.prefix,
-        config.bot.owner
+        config.bot.owner.to_string()
     );
 
     // Persist database connection and config
