@@ -1,12 +1,8 @@
 use crate::bot_data::SqliteDatabaseConnection;
-use crate::db::models::DatabaseClass;
-use crate::db::schema::classes as database_classes;
-use diesel::prelude::*;
+use crate::db::model::Class;
+use rusqlite::Connection;
 use serenity::{
-    framework::standard::{
-        macros::{command},
-        Args, CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::channel::Message,
     prelude::*,
     utils::Colour,
@@ -19,7 +15,7 @@ use std::collections::BTreeMap;
 pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     let data = ctx.data.read();
 
-    let db: &SqliteConnection = &data
+    let db: &Connection = &data
         .get::<SqliteDatabaseConnection>()
         .unwrap()
         .lock()
@@ -27,7 +23,7 @@ pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
     let filter = args.remains();
 
-    msg.channel_id.send_message(&ctx, |m| {
+    /* msg.channel_id.send_message(&ctx, |m| {
         m.embed(|e| {
             match database_classes::table.load::<DatabaseClass>(db) {
                 Err(err) => {
@@ -109,7 +105,7 @@ pub fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         });
 
         m
-    })?;
+    })?; */
 
     Ok(())
 }

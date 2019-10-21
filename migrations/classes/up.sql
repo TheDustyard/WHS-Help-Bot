@@ -1,4 +1,0 @@
-CREATE TABLE classes (
-    id TEXT PRIMARY KEY NOT NULL,
-    tag TEXT NOT NULL
-)

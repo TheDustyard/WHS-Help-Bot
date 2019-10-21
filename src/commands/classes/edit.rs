@@ -1,13 +1,9 @@
 use crate::bot_data::{BotConfig, SqliteDatabaseConnection};
 use crate::commands::checks::ADMIN_CHECK;
 use crate::config::StaticConfiguration;
-use crate::db::schema::classes as database_classes;
-use diesel::prelude::*;
+use rusqlite::Connection;
 use serenity::{
-    framework::standard::{
-        macros::{command},
-        Args, CommandResult,
-    },
+    framework::standard::{macros::command, Args, CommandResult},
     model::{channel::Message, id::RoleId},
     prelude::*,
 };
@@ -20,7 +16,7 @@ use serenity::{
 #[num_args(3)]
 fn edit(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let data = ctx.data.read();
-    let db: &SqliteConnection = &data
+    let db: &Connection = &data
         .get::<SqliteDatabaseConnection>()
         .unwrap()
         .lock()
@@ -36,7 +32,7 @@ fn edit(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let id = args.single::<RoleId>()?;
     let field = args.single::<String>()?;
 
-    match id.to_role_cached(&ctx) {
+    /*  match id.to_role_cached(&ctx) {
         Some(role) => match &field[..] {
             "name" => {
                 let name = args.single_quoted::<String>()?;
@@ -116,7 +112,7 @@ fn edit(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
             msg.channel_id
                 .say(&ctx, format!("Role `{}` does not exist.", id))?;
         }
-    }
+    } */
 
     Ok(())
 }

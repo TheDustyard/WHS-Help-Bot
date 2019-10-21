@@ -1,33 +1,28 @@
-#[macro_use]
-extern crate diesel_migrations;
-
+use lib::{
+    bot_data::{BotConfig, SqliteDatabaseConnection},
+    commands, connect_discord,
+    db::{
+        self,
+        model::{Category, Class},
+    },
+    discord::framework::StandardFrameworkWrapper,
+    load_config, load_environment,
+};
+use log::{debug, error, info};
+use rusqlite::NO_PARAMS;
 use serenity::framework::standard::{DispatchError, StandardFramework};
 use std::sync::{Arc, Mutex};
 
-use lib::bot_data::{BotConfig, SqliteDatabaseConnection};
-use lib::{
-    commands, connect_discord, establish_connection, load_config, load_environment,
-    StandardFrameworkWrapper,
-};
-
-embed_migrations!("./migrations");
-
 fn main() {
     load_environment();
+    let connection = db::establish_connection();
+    // TODO: determine when to do so
+    match db::migrate::up(&connection) {
+        Ok(()) => debug!("Successfully ran up migration"),
+        Err(e) => error!("Failed to run up migration: {:?}", e),
+    };
 
-    let connection = establish_connection();
-
-    // Setup database
-    // By default the output is thrown out. If you want to redirect it to stdout, you
-    // should call embedded_migrations::run_with_output.
-    embedded_migrations::run_with_output(&connection, &mut std::io::stdout()).unwrap();
-
-    // println!("{}", sample_users(&connection));
-    // println!("{}", sample_classes(&connection));
-
-    let config = load_config().unwrap();
-
-    // println!("{:#?}", config);
+    let config = load_config();
 
     let mut client = connect_discord();
     client.with_framework(
@@ -95,7 +90,7 @@ fn main() {
         )
     );
 
-    println!(
+    info!(
         "Starting bot {:?} with prefix {} and owner {}",
         client
             .cache_and_http
@@ -106,6 +101,20 @@ fn main() {
         config.bot.prefix,
         config.bot.owner.to_string()
     );
+
+    {
+        let mut statement = connection.prepare("SELECT * FROM category").unwrap();
+        let category_iter = statement.query_map(NO_PARAMS, |row| Ok(Category::from_row(row))).unwrap();
+        for category in category_iter {
+            println!("Found cat {:?}", category.unwrap());
+        }
+
+        let mut statement = connection.prepare("SELECT * FROm class").unwrap();
+        let class_iter = statement.query_map(NO_PARAMS, |row| Ok(Class::from_row(row))).unwrap();
+        for class in class_iter {
+            println!("Found class {:?}", class.unwrap());
+        }
+    }
 
     // Persist database connection and config
     {

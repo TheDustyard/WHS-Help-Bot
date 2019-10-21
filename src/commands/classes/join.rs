@@ -1,7 +1,6 @@
 use crate::bot_data::SqliteDatabaseConnection;
-use crate::db::models::DatabaseClass;
-use crate::db::schema::classes as database_classes;
-use diesel::prelude::*;
+use crate::db::model::Class;
+use rusqlite::Connection;
 use serenity::{
     framework::standard::{macros::command, Args, CommandResult},
     model::{channel::Message, id::RoleId},
@@ -17,7 +16,7 @@ use serenity::{
 fn join(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let data = ctx.data.read();
 
-    let db: &SqliteConnection = &data
+    let db: &Connection = &data
         .get::<SqliteDatabaseConnection>()
         .unwrap()
         .lock()
@@ -25,7 +24,7 @@ fn join(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
 
     let class_id = args.single::<RoleId>();
 
-    match class_id {
+    /* match class_id {
         Ok(class_id) => {
             match database_classes::table
                 .filter(database_classes::id.eq(class_id.to_string()))
@@ -86,7 +85,7 @@ fn join(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 )?,
             };
         }
-    }
+    } */
 
     Ok(())
 }

@@ -10,11 +10,11 @@ edition = "2018"
 serenity = "0.7.1"
 serde = { version = "1.0.101", features = ["derive"] }
 toml = "0.5.3"
-diesel = { version = "1.4.3", features = ["sqlite"] }
-diesel_migrations = "1.4.0"
 dotenv = "0.14.1"
-libsqlite3-sys = { version = "0.9.1", features = ["bundled"]}
+rusqlite = { version = "0.20.0", features = ["bundled", "trace"]}
 threadpool = "1.7.1"
+log = "0.4"
+pretty_env_logger = "0.3"
 
 [lib]
 name = "lib"

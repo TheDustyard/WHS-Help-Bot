@@ -1,9 +1,8 @@
 use crate::bot_data::{BotConfig, SqliteDatabaseConnection};
 use crate::commands::checks::ADMIN_CHECK;
 use crate::config::StaticConfiguration;
-use crate::db::models::DatabaseClass;
-use crate::db::schema::classes as database_classes;
-use diesel::prelude::*;
+use crate::db::model::Class;
+use rusqlite::Connection;
 use serenity::{
     framework::standard::{macros::command, ArgError, Args, CommandResult},
     model::{channel::Message, id::RoleId},
@@ -19,7 +18,7 @@ use serenity::{
 #[max_args(3)]
 fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let data = ctx.data.read();
-    let db: &SqliteConnection = &data
+    let db: &Connection = &data
         .get::<SqliteDatabaseConnection>()
         .unwrap()
         .lock()
@@ -45,7 +44,7 @@ fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
         }
     }
 
-    if id.is_err() {
+    /* if id.is_err() {
         let role_result = config
             .server
             .id
@@ -133,7 +132,7 @@ fn add(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
                 }
             }
         }
-    }
+    } */
 
     Ok(())
 }
