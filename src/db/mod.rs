@@ -12,6 +12,24 @@ pub trait Migrateable {
 pub trait Queryable {
 }
 
+/// A convinience struct to provide methods that can run across all of the tables
+pub struct AllTables;
+impl Migrateable for AllTables {
+    fn migrate_up(conn: &Connection) -> SQLResult<()> {
+        model::Category::migrate_up(conn)?;
+        model::Class::migrate_up(conn)?;
+
+        Ok(())
+    }
+
+    fn migrate_down(conn: &Connection) -> SQLResult<()> {
+        model::Category::migrate_down(conn)?;
+        model::Class::migrate_down(conn)?;
+
+        Ok(())
+    }
+}
+
 pub fn establish_connection() -> Connection {
     match env::var("DATABASE_URL") {
         Ok(database_url) => match Connection::open(&database_url) {

@@ -27,7 +27,7 @@ impl Migrateable for Class {
                 `id`	INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
                 `name`	TEXT NOT NULL,
                 `role`	TEXT NOT NULL UNIQUE,
-                `category`	TEXT NOT NULL,
+                `category`	INTEGER NOT NULL,
                 `channel`	TEXT NOT NULL UNIQUE,
                 FOREIGN KEY(`category`)
                 REFERENCES `category`(`id`)

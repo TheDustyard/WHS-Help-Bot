@@ -4,6 +4,7 @@ use lib::{
     db::{
         self,
         model::{Category, Class},
+        Migrateable
     },
     discord::framework::StandardFrameworkWrapper,
     load_config, load_environment,
@@ -17,8 +18,8 @@ fn main() {
     load_environment();
     let connection = db::establish_connection();
     // TODO: determine when to do so
-    match db::migrate::up(&connection) {
-        Ok(()) => debug!("Successfully ran up migration"),
+    match db::AllTables::migrate_up(&connection) {
+        Ok(()) => debug!("Successfully ran up migrations"),
         Err(e) => error!("Failed to run up migration: {:?}", e),
     };
 
@@ -104,13 +105,13 @@ fn main() {
 
     {
         let mut statement = connection.prepare("SELECT * FROM category").unwrap();
-        let category_iter = statement.query_map(NO_PARAMS, |row| Ok(Category::from_row(row))).unwrap();
+        let category_iter = statement.query_map(NO_PARAMS, Category::from_row).unwrap();
         for category in category_iter {
             println!("Found cat {:?}", category.unwrap());
         }
 
         let mut statement = connection.prepare("SELECT * FROm class").unwrap();
-        let class_iter = statement.query_map(NO_PARAMS, |row| Ok(Class::from_row(row))).unwrap();
+        let class_iter = statement.query_map(NO_PARAMS, Class::from_row).unwrap();
         for class in class_iter {
             println!("Found class {:?}", class.unwrap());
         }
