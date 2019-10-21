@@ -1,14 +1,16 @@
 //! The TypeMapKeys that are stored in the bot data
 
-use crate::config::StaticConfiguration;
-use rusqlite::Connection;
+use crate::{
+    db::Database,
+    config::StaticConfiguration
+};
 use serenity::prelude::TypeMapKey;
 use std::sync::{Arc, Mutex};
 
-pub struct SqliteDatabaseConnection;
+pub struct DatabaseConnection;
 
-impl TypeMapKey for SqliteDatabaseConnection {
-    type Value = Arc<Mutex<Connection>>;
+impl TypeMapKey for DatabaseConnection {
+    type Value = Arc<Mutex<Database>>;
 }
 
 pub struct BotConfig;

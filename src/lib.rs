@@ -8,6 +8,7 @@ pub mod commands;
 pub mod config;
 pub mod db;
 pub mod discord;
+pub mod model;
 
 use config::StaticConfiguration;
 use discord::events::Handler;

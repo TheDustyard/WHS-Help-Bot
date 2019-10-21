@@ -1,26 +1,27 @@
 use lib::{
-    bot_data::{BotConfig, SqliteDatabaseConnection},
+    bot_data::{BotConfig, DatabaseConnection},
     commands, connect_discord,
-    db::{
-        self,
-        model::{Category, Class},
-        Migrateable
-    },
+    db::Database,
     discord::framework::StandardFrameworkWrapper,
     load_config, load_environment,
 };
 use log::{debug, error, info};
-use rusqlite::NO_PARAMS;
 use serenity::framework::standard::{DispatchError, StandardFramework};
-use std::sync::{Arc, Mutex};
+use std::{
+    env,
+    sync::{Arc, Mutex},
+};
 
 fn main() {
     load_environment();
-    let connection = db::establish_connection();
-    // TODO: determine when to do so
-    match db::AllTables::migrate_up(&connection) {
-        Ok(()) => debug!("Successfully ran up migrations"),
-        Err(e) => error!("Failed to run up migration: {:?}", e),
+
+    let database = match env::var("DATABASE_URL") {
+        Ok(database_url) => Database::open(database_url),
+        Err(e) => {
+            let message = format!("Failed to load DATABASE_URL environment variable: {:?}", e);
+            error!("{}", message);
+            panic!("{}", message);
+        }
     };
 
     let config = load_config();
@@ -34,7 +35,6 @@ fn main() {
                     .owners(vec![config.bot.owner].into_iter().collect())
             }) // set the bot's prefix to "!"
             .help(&commands::HELP_COMMAND) // Help
-            .group(&commands::CLASS_GROUP)
             .group(&commands::ADMIN_GROUP)
             .on_dispatch_error(|context, msg, error| match error {
                 DispatchError::NotEnoughArguments { min, given } => {
@@ -104,23 +104,13 @@ fn main() {
     );
 
     {
-        let mut statement = connection.prepare("SELECT * FROM category").unwrap();
-        let category_iter = statement.query_map(NO_PARAMS, Category::from_row).unwrap();
-        for category in category_iter {
-            println!("Found cat {:?}", category.unwrap());
-        }
-
-        let mut statement = connection.prepare("SELECT * FROm class").unwrap();
-        let class_iter = statement.query_map(NO_PARAMS, Class::from_row).unwrap();
-        for class in class_iter {
-            println!("Found class {:?}", class.unwrap());
-        }
+        println!("", database)
     }
 
     // Persist database connection and config
     {
         let mut data = client.data.write();
-        data.insert::<SqliteDatabaseConnection>(Arc::new(Mutex::new(connection)));
+        data.insert::<DatabaseConnection>(Arc::new(Mutex::new(database)));
         data.insert::<BotConfig>(config);
     }
 
