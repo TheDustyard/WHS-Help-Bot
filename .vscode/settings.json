@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "askForPassword": false,
+            "database": "./whshb.db",
+            "dialect": "SQLite",
+            "name": "whshb"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}

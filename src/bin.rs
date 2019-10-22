@@ -104,7 +104,7 @@ fn main() {
     );
 
     {
-        println!("", database)
+        println!("{}", database);
     }
 
     // Persist database connection and config
