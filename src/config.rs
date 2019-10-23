@@ -1,5 +1,5 @@
 use serde::Deserialize;
-use serenity::model::id::{GuildId, RoleId, UserId};
+use serenity::model::id::{ChannelId, GuildId, RoleId, UserId};
 
 #[derive(Deserialize, Debug)]
 pub struct StaticConfiguration {
@@ -17,6 +17,8 @@ pub struct ServerConfig {
     pub id: GuildId,
     /// The adminatrator roles that can run admin commands
     pub admin_roles: Vec<RoleId>,
+    /// The channel to log the bot status into
+    pub status_log: ChannelId,
 }
 
 #[derive(Deserialize, Debug)]

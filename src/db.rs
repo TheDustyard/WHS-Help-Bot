@@ -1,15 +1,27 @@
+use crate::model::{Class, Group};
 use log::{debug, error};
-use prettytable::{Cell, Row, Table};
-use rusqlite::{Connection, Result as SQLResult, NO_PARAMS};
-use std::env;
-use std::fmt::{Display, Formatter};
+use rusqlite::{Connection, Result as SQLResult, Row, NO_PARAMS};
+use serenity::model::id::{ChannelId, RoleId};
+use std::fmt::Display;
 use std::path::Path;
 
-static CATEGORY_SQL: &[u8] = include_bytes!("sql/category.sql");
-static CLASS_SQL: &[u8] = include_bytes!("sql/class.sql");
+mod sql {
+    pub mod schema {
+        pub static GROUP: &str = include_str!("sql/schema/group.sql");
+        pub static CLASS: &str = include_str!("sql/schema/class.sql");
+    }
+
+    pub mod query {
+        pub static ALL_CLASSES: &str = include_str!("sql/query/all_classes.sql");
+    }
+}
 
 pub struct Database {
     connection: Connection,
+}
+
+fn asu64(string: String) -> u64 {
+    string.parse().unwrap()
 }
 
 impl Database {
@@ -25,12 +37,8 @@ impl Database {
                 debug!("Enabled Foreign Keys on database: {}", file);
 
                 // CREATE TABLES IF NOT EXIST
-                connection
-                    .execute(&String::from_utf8_lossy(CATEGORY_SQL), NO_PARAMS)
-                    .unwrap();
-                connection
-                    .execute(&String::from_utf8_lossy(CLASS_SQL), NO_PARAMS)
-                    .unwrap();
+                connection.execute(sql::schema::GROUP, NO_PARAMS).unwrap();
+                connection.execute(sql::schema::CLASS, NO_PARAMS).unwrap();
 
                 return Database { connection };
             }
@@ -41,65 +49,34 @@ impl Database {
             }
         }
     }
-}
 
-impl Display for Database {
-    fn fmt(&self, formatter: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        let mut select = self
+    pub fn get_all_classes(&self) -> SQLResult<Vec<Class>> {
+        let mut stmt = self
             .connection
-            .prepare("SELECT name FROM sqlite_master WHERE type='table';")
+            .prepare_cached(sql::query::ALL_CLASSES)
             .unwrap();
 
-        let tables = select
-            .query_map(NO_PARAMS, |row| {
-                let mut table = Table::new();
+        stmt.query_map(NO_PARAMS, |row| Self::get_class_from_row(row))
+            .unwrap()
+            .collect()
+    }
 
-                let name = row.get::<_, String>(0)?;
-
-                let mut stmt = self
-                    .connection
-                    .prepare(&format!("SELECT * FROM {}", name))
-                    .unwrap();
-                let header_row = Row::new(
-                    stmt.columns()
-                        .into_iter()
-                        .map(|column| Cell::new(column.name()))
-                        .collect::<Vec<_>>(),
-                );
-                let rows = stmt
-                    .query_map(NO_PARAMS, |row| {
-                        let mut cells = Vec::new();
-
-                        for column_num in 0..row.column_count() {
-                            cells.push(Cell::new(&format!("{:?}", row.get::<_, String>(column_num))));
-                        }
-
-                        Ok(Row::new(cells))
-                    })
-                    .unwrap();
-
-                table.add_row(header_row);
-                for row in rows {
-                    match row {
-                        Ok(row) => {
-                            table.add_row(row);
-                        }
-                        Err(e) => return Err(e)
-                    }
-                }
-
-                Ok((name.clone(), table))
-            })
-            .unwrap();
-
-        for table in tables {
-            match table {
-                Ok((name, table)) => writeln!(formatter, "table: {}\n{}", name, table),
-                Err(e) => writeln!(formatter, "ERR: {}", e),
-            }
-            .unwrap();
-        }
-
-        Ok(())
+    fn get_class_from_row(row: &Row) -> SQLResult<Class> {
+        Ok(Class {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            role: RoleId(asu64(row.get(2)?)),
+            channel: ChannelId(asu64(row.get(3)?)),
+            group: if let Some(id) = row.get::<_, Option<u32>>(4)? {
+                Some(Group {
+                    id,
+                    name: row.get(5)?,
+                    channel_group: ChannelId(asu64(row.get(6)?)),
+                    vc: ChannelId(asu64(row.get(7)?)),
+                })
+            } else {
+                None
+            },
+        })
     }
 }

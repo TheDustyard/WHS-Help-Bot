@@ -1,9 +1,10 @@
 use lib::{
-    bot_data::{BotConfig, DatabaseConnection},
+    bot_data::{BotConfig, DatabaseConnection, BotLogger},
     commands, connect_discord,
     db::Database,
     discord::framework::StandardFrameworkWrapper,
     load_config, load_environment,
+    status_logger::StatusLogger,
 };
 use log::{debug, error, info};
 use serenity::framework::standard::{DispatchError, StandardFramework};
@@ -104,13 +105,14 @@ fn main() {
     );
 
     {
-        println!("{}", database);
+        debug!("{:#?}", database.get_all_classes());
     }
 
     // Persist database connection and config
     {
         let mut data = client.data.write();
         data.insert::<DatabaseConnection>(Arc::new(Mutex::new(database)));
+        data.insert::<BotLogger>(StatusLogger::new(config.server.status_log));
         data.insert::<BotConfig>(config);
     }
 

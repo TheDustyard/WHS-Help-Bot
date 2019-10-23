@@ -1,4 +1,4 @@
-use serenity::model::id::{ChannelId, GuildId, RoleId};
+use serenity::model::id::{ChannelId, RoleId};
 
 #[derive(Debug)]
 pub struct Class {
@@ -9,17 +9,19 @@ pub struct Class {
     /// The role id to link this class to
     pub role: RoleId,
     /// The category that the class is in
-    pub category: Option<Category>,
+    pub group: Option<Group>,
     /// The channel to link this class to
     pub channel: ChannelId,
 }
 
 #[derive(Debug)]
-pub struct Category {
-    /// The internal ID of the category
+pub struct Group {
+    /// The internal ID of the group
     pub id: u32,
     /// The name of the category, linked to the name of the channel_group
     pub name: String,
     /// The channel group to put all the channels into
     pub channel_group: ChannelId,
+    /// The VC for the specific channel group
+    pub vc: ChannelId
 }

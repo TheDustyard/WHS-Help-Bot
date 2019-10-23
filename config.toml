@@ -8,7 +8,7 @@ admin_roles = [
     609146598756319292, # Moderator
     609146291389464577 # Admin
 ]
-
+status_log = 635677461484404756
 
 [roles] # Configuration about the roles
 auto_assign = [] # Roles to auto assign on join (ex. "group" roles)
