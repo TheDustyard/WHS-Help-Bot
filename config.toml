@@ -1,7 +1,7 @@
 [bot] # Configuration for the bot
 prefix = "!"
 owner = 168827261682843648 # DusterTheFirst
-website = "https://whs-history.dusterthefirst.com"
+website = "https://whs-help.dusterthefirst.com"
 
 [server] # Configuration for the server
 id = 609141661884481543 # Server ID
