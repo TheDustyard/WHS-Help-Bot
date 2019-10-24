@@ -1,4 +1,4 @@
 # Wellesley High School Discord Help Server Administration Bot
-WHSHDHSAB for short
+WHS Help Bot for short
 
 ...
