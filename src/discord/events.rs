@@ -46,46 +46,122 @@ impl EventHandler for Handler {
         );
     }
 
+    // TODO: ADD MORE FIX
     fn guild_role_create(&self, ctx: Context, guild_id: GuildId, new: Role) {
         let data = ctx.data.read();
 
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let auditlog = guild_id
-            .audit_logs(&ctx, Some(31), None, None, None)
-            .unwrap();
+        // let auditlog = guild_id
+        //     .audit_logs(&ctx, Some(31), None, None, None)
+        //     .unwrap();
 
-        for (id, entry) in auditlog.entries {
-            // if let Action::Role(role) = entry.action {}
-            info!("{} {} {:?} {}", id, entry.target_id, entry.action, new.id);
-        }
+        // for (id, entry) in auditlog.entries {
+        //     // if let Action::Role(role) = entry.action {}
+        //     info!("{} {} {:?} {}", id, entry.target_id, entry.action, new.id);
+        // }
 
         let _ = logger.warn(
             &ctx,
             format!("PARANOIA"),
-            format!("WATCH OUT! A new role {} was created. If this is meant to be a class, please do not add such roles manually, use the `import` command to add this role to the classes databse and please use the `create` command from now on to create classes. For more information on using the bot please visit {}", new, config.bot.website),
+            format!("**WATCH OUT!** A new role {} was created.\nIf this is meant to be a class, please do not add such roles manually, use the `!c import` command to add this role to the classes databse and please use the `!c create` command from now on to create classes.\n*For more information on using the bot please visit {}*", new, config.bot.website),
         );
     }
     fn guild_role_delete(
         &self,
-        _ctx: Context,
+        ctx: Context,
         _guild_id: GuildId,
-        _removed_role_id: RoleId,
+        removed_role_id: RoleId,
         _removed_role_data_if_available: Option<Role>,
     ) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A role, {}, was deleted.\nIf this is registered as a class, please do not delete such roles manually. Use the `!c delete` command from now on to delete classes.\n*For more information on using the bot please visit {}*", removed_role_id, config.bot.website),
+        );
     }
     fn guild_role_update(
         &self,
-        _ctx: Context,
+        ctx: Context,
         _guild_id: GuildId,
         _old_data_if_available: Option<Role>,
-        _new: Role,
+        new: Role,
     ) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A role, {}, was updated.\nIf this is registered as a class, please do not update such roles manually. Use the `!c edit` command from now on to edit classes.\n*For more information on using the bot please visit {}*", new, config.bot.website),
+        );
     }
-    fn channel_create(&self, _ctx: Context, _channel: Arc<RwLock<GuildChannel>>) {}
-    fn category_create(&self, _ctx: Context, _category: Arc<RwLock<ChannelCategory>>) {}
-    fn category_delete(&self, _ctx: Context, _category: Arc<RwLock<ChannelCategory>>) {}
-    fn channel_delete(&self, _ctx: Context, _channel: Arc<RwLock<GuildChannel>>) {}
-    fn channel_update(&self, _ctx: Context, _old: Option<Channel>, _new: Channel) {}
+    fn channel_create(&self, ctx: Context, channel: Arc<RwLock<GuildChannel>>) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A channel, {}, was created.\nIf this should be tied to a class, please do not delete such roles manually. Use the `!c create` command from now on to create classes and their channels.\n*For more information on using the bot please visit {}*", channel.read(), config.bot.website),
+        );
+    }
+    fn channel_delete(&self, ctx: Context, channel: Arc<RwLock<GuildChannel>>) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A channel, {}, was deleted.\nIf this was registered with a class, please do not update such channels manually. Use the `!c delete` command from now on to delete classes.\n*For more information on using the bot please visit {}*", channel.read(), config.bot.website),
+        );
+    }
+    fn channel_update(&self, ctx: Context, _old: Option<Channel>, new: Channel) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A channel, {}, was updated.\nIf this is registered with a class, please do not update such channels manually. Use the `!c edit` command from now on to edit classes and their respective channels.\n*For more information on using the bot please visit {}*", new, config.bot.website),
+        );
+    }
+    fn category_create(&self, ctx: Context, category: Arc<RwLock<ChannelCategory>>) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A channel category, {}, was created.\nIf this should be registered with a group, please do not create such categories manually. Use the `!g create` command from now on to create groups.\n*For more information on using the bot please visit {}*", category.read().id, config.bot.website),
+        );
+    }
+    fn category_delete(&self, ctx: Context, category: Arc<RwLock<ChannelCategory>>) {
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
+        let _ = logger.warn(
+            &ctx,
+            format!("PARANOIA"),
+            format!("**WATCH OUT!** A channel category, {}, was deleted.\nIf this is registered as a group, please do not delete such categories manually. Use the `!g delete` or `!g edit` commands from now on to delete or rename groups.\n*For more information on using the bot please visit {}*", category.read().id, config.bot.website),
+        );
+    }
 }
