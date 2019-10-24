@@ -37,4 +37,6 @@ pub struct BotConfig {
     pub prefix: String,
     /// The owner of the bot
     pub owner: UserId,
+    /// The URL for information
+    pub website: String
 }
