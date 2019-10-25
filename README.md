@@ -6,6 +6,8 @@ WHS Help Bot for short
     * [Using The Bot](#Using-The-Bot)
         * [Command Syntax](#Command-Syntax)
         * [The Help Command](#The-Help-Command)
+            * [Listing All Commands](#Listing-All-Commands)
+            * [Viewing Information About A Command](#Viewing-Information-About-A-Command)
     * [Student Commands](#Student-Commands)
         * [Joining Classes](#Joining-Classes)
         * [Leaving Classes](#Leaving-Classes)
@@ -43,7 +45,11 @@ The `..` in front of a placeholder tells you that there can me one or more of
 them, as you will see later in the tutorial.
 
 As an example, let us say we have a bot with a prefix `!` and we are trying to run the command `help`.
-To run this command we would type `!help`. Let us break this apart, The `!` in this case went in place of
+To run this command we would type
+
+    !help
+
+Let us break this apart, The `!` in this case went in place of
 the `<prefix>` placeholder and the `help` where the `<command>` was. The command has no subcommands nor
 arguments so we can ignore those.
 
@@ -89,6 +95,44 @@ If you wanted to know more about another command, or to understand its syntax, y
 help command.
 
 ### Using The Help Command
+The first command that was explained was the `help` command this command will be the backbone of you
+learning to use the bot to its fullest.
+
+This command can be used in 3 ways.
+1. List out all of the commands that you can run
+2. View more information about a command group
+3. View more information about a subcommand
+
+The last 2 are very simalar so they will be explained together. But first lets explain the first use
+of the command, to list all of the commands that you can run
+
+#### Listing All Commands
+To list all of the commands that you can run you can run the command
+
+    !help
+
+This command will cause the bot to send an embed (A cool formatted block of text) which will have multiple
+columns of text. These columns may look similar to the image below.
+
+![Help Embed](!!URL!!)
+
+These columns tell you the group that the command is in, these are not neccicarally important, they are more
+for users to better understand the use of the command. What is more important is the line below the group name,
+if it exists. The line would start with `Prefix: .., .., ..` Where the `..` are replaced with prefixes for the
+commands. In the previous example, the `Prefix:` section for the add command would look something like
+`Prefix: classes, c, cl`. The command could also be used with the prefix `c` or `cl` since they are also in the list.
+These shortened prefixes allow for quicker typing of commands; `!c join` rather than `!classes join`. These prefixes
+are mandatory for the command to run correctly, for it is a different command than juts `!join`
+
+Viewing all of the commands is nice, but sometimes you would like to see more information on the specific usage of a
+command you can use the second form of the help command.
+
+#### Viewing Information About A Command
+In order to view the usage or other information about a command, you could use the `help` command and provide the arguments.
+The argument layout for the `help` command is
+
+    !help [..command|subcommand]
+
 
 
 # Support
