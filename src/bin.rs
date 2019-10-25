@@ -1,5 +1,5 @@
 use lib::{
-    bot_data::{BotConfig, DatabaseConnection, BotLogger},
+    bot_data::{BotConfig, BotLogger, DatabaseConnection},
     commands, connect_discord,
     db::Database,
     discord::framework::StandardFrameworkWrapper,
@@ -42,7 +42,7 @@ fn main() {
                     let _ = msg.channel_id.say(
                         &context,
                         &format!(
-                            "Needed {} arguments, but only got {} arguments. Try adding qoutation marks around arguments with a space in them.",
+                            "The command requires at least {} argument(s), but was only given {} arguments. Make sure you provided all of the arguments.",
                             min, given
                         ),
                     );
@@ -51,7 +51,7 @@ fn main() {
                     let _ = msg.channel_id.say(
                         &context,
                         &format!(
-                            "Max arguments allowed is {}, but got {} arguments. Try adding qoutation marks around arguments with a space in them.",
+                            "The command can only take up to {} argument(s), but was given {} argument(s). Try adding qoutation marks around arguments with a space in them.",
                             max, given
                         ),
                     );
