@@ -19,8 +19,8 @@ WHS Help Bot for short
 * [License](#License)
 
 # Tutorial
-This tutorial is aimed to get people started in using the WHS help bot.
-Please read each section carefully and feel free to submit a pull request
+This tutorial is aimed to help people get started with the use of the WHS help bot.
+Please read each section carefully and feel free to submit a pull request (a request for changes)
 [here](https://github.com/DusterTheFirst/WHS-Help-Bot/edit/master/README.md)
 if you have the ability to do so and have found a mistake in the documentation.
 
@@ -31,9 +31,11 @@ To start using the bot, the first thing you need to understand is how to send
 commands.
 
 ### Command Syntax
+> You may have to read through the entirety of the tutorial a few times before it starts to make any sense
+
 The syntax to send a command is:
 
-```<prefix><command> [..subcommand] [..options]```
+    !<command> [..subcommand] [..options]
 
 If this makes no sense to you, let me break it down. This type of syntax will be used much
 more throughout the tutorial.
@@ -49,8 +51,8 @@ To run this command we would type
 
     !help
 
-Let us break this apart, The `!` in this case went in place of
-the `<prefix>` placeholder and the `help` where the `<command>` was. The command has no subcommands nor
+Let us break this apart, The `!` tells the bot the command it needs to carry out
+and the `help` where the `<command>` was. The command has no subcommands nor
 arguments so we can ignore those.
 
 That was simple right? Well lets do another. We now have the sub command
@@ -61,7 +63,7 @@ name. So far we have:
 
     !classes
 
-Next we need ot add the subcommand, `join`.
+Next we need to add the subcommand, `join`.
 In order to tell the bot that we are running a subcommand, we need to add a space and then
 the name leving us with:
 
@@ -71,8 +73,8 @@ If we were to run this command right now, it would give us an error:
 
     This command requires 1 argument(s) while it was only given 0
 
-This would give an inkling of what we forgot, the class we want to join. To add the class,
-we can just put a space and the class we want to join, for example `ACP History`. Doing so
+This would give an inkling as to what we forgot: the class we want to join. To add the class,
+we can just add a space and the class we want to join, for example `ACP History`. Doing so
 would leave us with:
 
     !classes join ACP History
@@ -133,7 +135,7 @@ The argument layout for the `help` command is
 
     !help [..command|subcommand]
 
-
+# FAQ
 
 # Support
 If you have found an issue with the bot, please report it to @DusterTheFirst
