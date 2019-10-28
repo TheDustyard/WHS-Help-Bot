@@ -117,7 +117,7 @@ fn main() {
         data.insert::<BotConfig>(config);
     }
 
-    /// Smooth Shutdown
+    // Smooth Shutdown
     {
         let data = Arc::clone(&client.data);
 
@@ -128,11 +128,20 @@ fn main() {
             let data = data.read();
             let status_logger = data.get::<BotLogger>().unwrap();
 
-            let _ = status_logger.warn(
-                &ctx,
-                "Bot shutting down",
-                "The bot has been stopped and is shutting down.",
-            );
+            if cfg!(debug_assertions) {
+                let _ = status_logger.warn(
+                    &ctx,
+                    "Bot shutting down",
+                    format!("The bot has been stopped manually and is shutting down.\n\nThis is totally normal since the bot is in debug mode and is activly under maintanance. Please do not report this."),
+                );
+            } else {
+                let _ = status_logger.error(
+                    &ctx,
+                    "Bot shutting down",
+                    format!("The bot has been stopped manually and is shutting down.\n\nThis is abnormal since the bot is in release mode, if the bot does not restart in the next few minutes, please report this to the bot owner `DusterTheFirst`"),
+                );
+            }
+            
             shard_manager.lock().shutdown_all();
         })
         .expect("Error setting Ctrl-C handler");
