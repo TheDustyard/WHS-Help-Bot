@@ -13,6 +13,7 @@ mod sql {
 
     pub mod query {
         pub static ALL_CLASSES: &str = include_str!("sql/query/all_classes.sql");
+        pub static ALL_GROUPS: &str = include_str!("sql/query/all_groups.sql");
     }
 }
 
@@ -50,18 +51,51 @@ impl Database {
         }
     }
 
+    /// A helper function to fetch all of the classes from the database
     pub fn get_all_classes(&self) -> SQLResult<Vec<Class>> {
         let mut stmt = self
             .connection
             .prepare_cached(sql::query::ALL_CLASSES)
             .unwrap();
 
-        stmt.query_map(NO_PARAMS, |row| Self::get_class_from_row(row))
+        stmt.query_map(NO_PARAMS, |row| Self::get_class_with_group_from_row(row))
             .unwrap()
             .collect()
     }
 
-    fn get_class_from_row(row: &Row) -> SQLResult<Class> {
+    /// A helper function to fetch all of the groups from the database
+    pub fn get_all_groups(&self) -> SQLResult<Vec<Group>> {
+        let mut stmt = self
+            .connection
+            .prepare_cached(sql::query::ALL_GROUPS)
+            .unwrap();
+
+        stmt.query_map(NO_PARAMS, |row| Self::get_group_from_row(row))
+            .unwrap()
+            .collect()
+    }
+
+    fn get_group_from_row(row: &Row) -> SQLResult<Group> {
+        Ok(Group {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            channel_group: ChannelId(asu64(row.get(2)?)),
+            vc: ChannelId(asu64(row.get(3)?)),
+        })
+    }
+
+    /// A helper function to transform a row using the following schema
+    /// ```
+    ///     `class`.`id`,
+    ///     `class`.`name`,
+    ///     `class`.`role`,
+    ///     `class`.`channel`,
+    ///     `group`.`id`,
+    ///     `group`.`name`,
+    ///     `group`.`channel_group`,
+    ///     `group`.`vc`
+    /// ```
+    fn get_class_with_group_from_row(row: &Row) -> SQLResult<Class> {
         Ok(Class {
             id: row.get(0)?,
             name: row.get(1)?,

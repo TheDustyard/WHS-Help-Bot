@@ -59,7 +59,7 @@ pub fn load_config() -> StaticConfiguration {
             debug!("Loaded config");
             match toml::from_str::<StaticConfiguration>(&file) {
                 Ok(c) => {
-                    debug!("Parses config");
+                    debug!("Parsing config");
                     return c;
                 }
                 Err(e) => {

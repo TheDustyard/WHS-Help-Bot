@@ -10,7 +10,7 @@ use log::{debug, error, info};
 use serenity::framework::standard::{DispatchError, StandardFramework};
 use std::{
     env,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, RwLock},
 };
 
 fn main() {
@@ -106,6 +106,7 @@ fn main() {
 
     {
         debug!("{:#?}", database.get_all_classes());
+        debug!("{:#?}", database.get_all_groups());
     }
 
     // Persist database connection and config
@@ -114,6 +115,27 @@ fn main() {
         data.insert::<DatabaseConnection>(Arc::new(Mutex::new(database)));
         data.insert::<BotLogger>(StatusLogger::new(config.server.status_log));
         data.insert::<BotConfig>(config);
+    }
+
+    /// Smooth Shutdown
+    {
+        let data = Arc::clone(&client.data);
+
+        let shard_manager = Arc::clone(&client.shard_manager);
+        let ctx = Arc::clone(&client.cache_and_http.http);
+
+        ctrlc::set_handler(move || {
+            let data = data.read();
+            let status_logger = data.get::<BotLogger>().unwrap();
+
+            let _ = status_logger.warn(
+                &ctx,
+                "Bot shutting down",
+                "The bot has been stopped and is shutting down.",
+            );
+            shard_manager.lock().shutdown_all();
+        })
+        .expect("Error setting Ctrl-C handler");
     }
 
     // start listening for events by starting a single shard

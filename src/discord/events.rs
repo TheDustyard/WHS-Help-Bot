@@ -62,9 +62,9 @@ impl EventHandler for Handler {
         //     info!("{} {} {:?} {}", id, entry.target_id, entry.action, new.id);
         // }
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A new role {} was created.\nIf this is meant to be a class, please do not add such roles manually, use the `!c import` command to add this role to the classes databse and please use the `!c create` command from now on to create classes.\n*For more information on using the bot please visit {}*", new, config.bot.website),
         );
     }
@@ -80,9 +80,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A role, {}, was deleted.\nIf this is registered as a class, please do not delete such roles manually. Use the `!c delete` command from now on to delete classes.\n*For more information on using the bot please visit {}*", removed_role_id, config.bot.website),
         );
     }
@@ -98,9 +98,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A role, {}, was updated.\nIf this is registered as a class, please do not update such roles manually. Use the `!c edit` command from now on to edit classes.\n*For more information on using the bot please visit {}*", new, config.bot.website),
         );
     }
@@ -110,9 +110,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A channel, {}, was created.\nIf this should be tied to a class, please do not delete such roles manually. Use the `!c create` command from now on to create classes and their channels.\n*For more information on using the bot please visit {}*", channel.read(), config.bot.website),
         );
     }
@@ -122,9 +122,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A channel, {}, was deleted.\nIf this was registered with a class, please do not update such channels manually. Use the `!c delete` command from now on to delete classes.\n*For more information on using the bot please visit {}*", channel.read(), config.bot.website),
         );
     }
@@ -134,9 +134,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A channel, {}, was updated.\nIf this is registered with a class, please do not update such channels manually. Use the `!c edit` command from now on to edit classes and their respective channels.\n*For more information on using the bot please visit {}*", new, config.bot.website),
         );
     }
@@ -146,9 +146,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A channel category, {}, was created.\nIf this should be registered with a group, please do not create such categories manually. Use the `!g create` command from now on to create groups.\n*For more information on using the bot please visit {}*", category.read().id, config.bot.website),
         );
     }
@@ -158,9 +158,9 @@ impl EventHandler for Handler {
         let logger = data.get::<BotLogger>().unwrap();
         let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.warn(
+        let _ = logger.error(
             &ctx,
-            format!("PARANOIA"),
+            "PARANOIA",
             format!("**WATCH OUT!** A channel category, {}, was deleted.\nIf this is registered as a group, please do not delete such categories manually. Use the `!g delete` or `!g edit` commands from now on to delete or rename groups.\n*For more information on using the bot please visit {}*", category.read().id, config.bot.website),
         );
     }

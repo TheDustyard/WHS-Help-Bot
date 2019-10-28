@@ -28,7 +28,19 @@ impl StatusLogger {
         Ok(())
     }
 
-    pub fn success() {}
+    pub fn success(&self, ctx: impl AsRef<Http>, title: impl Display, message: impl Display) -> SerenityResult<()> {
+        self.channel.send_message(ctx, |m| {
+            m.embed(|e| {
+                e.color(Colour::DARK_GREEN)
+                    .title(&title)
+                    .description(&message)
+            })
+        })?;
+
+        warn!("[{}] {}", title, message);
+
+        Ok(())
+    }
 
     pub fn warn(&self, ctx: impl AsRef<Http>, title: impl Display, message: impl Display) -> SerenityResult<()> {
         self.channel.send_message(ctx, |m| {
@@ -44,5 +56,17 @@ impl StatusLogger {
         Ok(())
     }
 
-    pub fn error() {}
+    pub fn error(&self, ctx: impl AsRef<Http>, title: impl Display, message: impl Display) -> SerenityResult<()> {
+        self.channel.send_message(ctx, |m| {
+            m.embed(|e| {
+                e.color(Colour::RED)
+                    .title(&title)
+                    .description(&message)
+            })
+        })?;
+
+        warn!("[{}] {}", title, message);
+
+        Ok(())
+    }
 }
