@@ -105,8 +105,13 @@ fn main() {
     );
 
     {
+        use serenity::model::id::RoleId;
+
         debug!("{:#?}", database.get_all_classes());
+        debug!("{:#?}", database.search_classes("jeff"));
+        debug!("{:#?}", database.filter_classes_by_roles(&[RoleId(10), RoleId(20), RoleId(30)]));
         debug!("{:#?}", database.get_all_groups());
+        debug!("{:#?}", database.search_groups("george"));
     }
 
     // Persist database connection and config

@@ -1,9 +1,10 @@
 use crate::model::{Class, Group};
 use log::{debug, error};
-use rusqlite::{Connection, Result as SQLResult, Row, NO_PARAMS};
+use rusqlite::{Connection, Result as SQLResult, Row, NO_PARAMS, types::Value, vtab::array};
 use serenity::model::id::{ChannelId, RoleId};
 use std::fmt::Display;
 use std::path::Path;
+use std::rc::Rc;
 
 mod sql {
     pub mod schema {
@@ -13,7 +14,10 @@ mod sql {
 
     pub mod query {
         pub static ALL_CLASSES: &str = include_str!("sql/query/all_classes.sql");
+        pub static FILTER_CLASSES_BY_ROLES: &str = include_str!("sql/query/filter_classes_by_roles.sql");
+        pub static SEARCH_CLASSES: &str = include_str!("sql/query/search_classes.sql");
         pub static ALL_GROUPS: &str = include_str!("sql/query/all_groups.sql");
+        pub static SEARCH_GROUPS: &str = include_str!("sql/query/search_groups.sql");
     }
 }
 
@@ -36,6 +40,9 @@ impl Database {
                     .execute("PRAGMA foreign_keys = ON;", NO_PARAMS)
                     .unwrap();
                 debug!("Enabled Foreign Keys on database: {}", file);
+
+                array::load_module(&connection).unwrap();
+                debug!("Enabled carray() on database: {}", file);
 
                 // CREATE TABLES IF NOT EXIST
                 connection.execute(sql::schema::GROUP, NO_PARAMS).unwrap();
@@ -63,6 +70,33 @@ impl Database {
             .collect()
     }
 
+    /// A helper function to fetch all of the classes from the database that fit a search term
+    pub fn search_classes(&self, search_term: &str) -> SQLResult<Vec<Class>> {
+        let mut stmt = self
+            .connection
+            .prepare_cached(sql::query::SEARCH_CLASSES)
+            .unwrap();
+
+        stmt.query_map(&[format!("%{}%", search_term)], |row| Self::get_class_with_group_from_row(row))
+            .unwrap()
+            .collect()
+    }
+
+        /// A helper function to fetch all of the classes from the database that fit a search term
+    pub fn filter_classes_by_roles(&self, roles: &[RoleId]) -> SQLResult<Vec<Class>> {
+        let mut stmt = self
+            .connection
+            .prepare_cached(sql::query::FILTER_CLASSES_BY_ROLES)
+            .unwrap();
+
+        let roles = roles.into_iter().map(|x| x.to_string()).map(Value::from).collect();
+        let ptr = Rc::new(roles);
+
+        stmt.query_map(&[&ptr], |row| Self::get_class_with_group_from_row(row))
+            .unwrap()
+            .collect()
+    }
+
     /// A helper function to fetch all of the groups from the database
     pub fn get_all_groups(&self) -> SQLResult<Vec<Group>> {
         let mut stmt = self
@@ -75,6 +109,25 @@ impl Database {
             .collect()
     }
 
+    /// A helper function to fetch all of the classes from the database that fit a search term
+    pub fn search_groups(&self, search_term: &str) -> SQLResult<Vec<Group>> {
+        let mut stmt = self
+            .connection
+            .prepare_cached(sql::query::SEARCH_GROUPS)
+            .unwrap();
+
+        stmt.query_map(&[format!("%{}%", search_term)], |row| Self::get_group_from_row(row))
+            .unwrap()
+            .collect()
+    }
+
+    /// A helper function to transform a row using the following schema
+    /// ```
+    ///     `group`.`id`,
+    ///     `group`.`name`,
+    ///     `group`.`channel_group`,
+    ///     `group`.`vc`
+    /// ```
     fn get_group_from_row(row: &Row) -> SQLResult<Group> {
         Ok(Group {
             id: row.get(0)?,

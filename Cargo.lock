@@ -1079,6 +1079,7 @@ dependencies = [
  "bitflags 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fallible-iterator 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "fallible-streaming-iterator 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)",
+ "lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "libsqlite3-sys 0.16.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lru-cache 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "memchr 2.2.1 (registry+https://github.com/rust-lang/crates.io-index)",

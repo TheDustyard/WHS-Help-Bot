@@ -19,6 +19,9 @@ WHS Help Bot for short
 * [License](#License)
 
 # Tutorial
+
+> !! THIS IS STILL UNDER CONSTRUCTION !! **READ WITH CAUTION**
+
 This tutorial is aimed to help people get started with the use of the WHS help bot.
 Please read each section carefully and feel free to submit a pull request (a request for changes)
 [here](https://github.com/DusterTheFirst/WHS-Help-Bot/edit/master/README.md)
