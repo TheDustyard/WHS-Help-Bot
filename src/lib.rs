@@ -10,6 +10,7 @@ pub mod db;
 pub mod discord;
 pub mod model;
 pub mod status_logger;
+pub mod util;
 
 use config::StaticConfiguration;
 use discord::events::Handler;

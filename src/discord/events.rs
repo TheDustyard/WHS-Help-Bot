@@ -4,12 +4,22 @@ use serenity::{
     model::{guild::Action, prelude::*},
     prelude::*,
 };
-use std::sync::Arc;
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
+
+const IS_READY: AtomicBool = AtomicBool::new(false);
 
 pub struct Handler;
 
 impl EventHandler for Handler {
     fn ready(&self, ctx: Context, data_about_bot: Ready) {
+        if IS_READY.load(Ordering::Relaxed) {
+            return;
+        }
+        IS_READY.store(true, Ordering::Relaxed);
+
         #[cfg(debug_assertions)]
         ctx.set_presence(
             Some(Activity::playing("with zach's emotions")),

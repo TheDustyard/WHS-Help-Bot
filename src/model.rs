@@ -1,4 +1,5 @@
 use serenity::model::id::{ChannelId, RoleId};
+use std::cmp::Ordering;
 
 #[derive(Debug)]
 pub struct Class {
@@ -14,7 +15,26 @@ pub struct Class {
     pub channel: ChannelId,
 }
 
-#[derive(Debug)]
+impl PartialEq for Class {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl Eq for Class {}
+
+impl Ord for Class {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+impl PartialOrd for Class {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+
+#[derive(Debug, Clone)]
 pub struct Group {
     /// The internal ID of the group
     pub id: u32,
@@ -23,5 +43,23 @@ pub struct Group {
     /// The channel group to put all the channels into
     pub channel_group: ChannelId,
     /// The VC for the specific channel group
-    pub vc: ChannelId
+    pub vc: ChannelId,
+}
+
+impl PartialEq for Group {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+impl Eq for Group {}
+
+impl Ord for Group {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.id.cmp(&other.id)
+    }
+}
+impl PartialOrd for Group {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
 }

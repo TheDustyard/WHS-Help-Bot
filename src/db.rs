@@ -1,7 +1,8 @@
 use crate::model::{Class, Group};
 use log::{debug, error};
-use rusqlite::{Connection, Result as SQLResult, Row, NO_PARAMS, types::Value, vtab::array};
+use rusqlite::{types::Value, vtab::array, Connection, Result as SQLResult, Row, NO_PARAMS};
 use serenity::model::id::{ChannelId, RoleId};
+use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::path::Path;
 use std::rc::Rc;
@@ -14,7 +15,9 @@ mod sql {
 
     pub mod query {
         pub static ALL_CLASSES: &str = include_str!("sql/query/all_classes.sql");
-        pub static FILTER_CLASSES_BY_ROLES: &str = include_str!("sql/query/filter_classes_by_roles.sql");
+        pub static COUNT_ALL_CLASSES: &str = include_str!("sql/query/count_all_classes.sql");
+        pub static FILTER_CLASSES_BY_ROLES: &str =
+            include_str!("sql/query/filter_classes_by_roles.sql");
         pub static SEARCH_CLASSES: &str = include_str!("sql/query/search_classes.sql");
         pub static ALL_GROUPS: &str = include_str!("sql/query/all_groups.sql");
         pub static SEARCH_GROUPS: &str = include_str!("sql/query/search_groups.sql");
@@ -70,6 +73,28 @@ impl Database {
             .collect()
     }
 
+    pub fn classes_count(&self) -> SQLResult<u32> {
+        let mut stmt = self
+            .connection
+            .prepare_cached(sql::query::COUNT_ALL_CLASSES)
+            .unwrap();
+
+        stmt.query_row(NO_PARAMS, |row| row.get(0))
+    }
+
+    // TODO: OPTOMIZE
+    pub fn map_classes_by_group(classes: &[Class]) -> BTreeMap<Option<Group>, Vec<&Class>> {
+        let mut map = BTreeMap::new();
+
+        for class in classes {
+            map.entry(class.group.clone())
+                .or_insert_with(Vec::new)
+                .push(class);
+        }
+
+        map
+    }
+
     /// A helper function to fetch all of the classes from the database that fit a search term
     pub fn search_classes(&self, search_term: &str) -> SQLResult<Vec<Class>> {
         let mut stmt = self
@@ -77,19 +102,25 @@ impl Database {
             .prepare_cached(sql::query::SEARCH_CLASSES)
             .unwrap();
 
-        stmt.query_map(&[format!("%{}%", search_term)], |row| Self::get_class_with_group_from_row(row))
-            .unwrap()
-            .collect()
+        stmt.query_map(&[format!("%{}%", search_term)], |row| {
+            Self::get_class_with_group_from_row(row)
+        })
+        .unwrap()
+        .collect()
     }
 
-        /// A helper function to fetch all of the classes from the database that fit a search term
+    /// A helper function to fetch all of the classes from the database that fit a search term
     pub fn filter_classes_by_roles(&self, roles: &[RoleId]) -> SQLResult<Vec<Class>> {
         let mut stmt = self
             .connection
             .prepare_cached(sql::query::FILTER_CLASSES_BY_ROLES)
             .unwrap();
 
-        let roles = roles.into_iter().map(|x| x.to_string()).map(Value::from).collect();
+        let roles = roles
+            .into_iter()
+            .map(|x| x.to_string())
+            .map(Value::from)
+            .collect();
         let ptr = Rc::new(roles);
 
         stmt.query_map(&[&ptr], |row| Self::get_class_with_group_from_row(row))
@@ -116,9 +147,11 @@ impl Database {
             .prepare_cached(sql::query::SEARCH_GROUPS)
             .unwrap();
 
-        stmt.query_map(&[format!("%{}%", search_term)], |row| Self::get_group_from_row(row))
-            .unwrap()
-            .collect()
+        stmt.query_map(&[format!("%{}%", search_term)], |row| {
+            Self::get_group_from_row(row)
+        })
+        .unwrap()
+        .collect()
     }
 
     /// A helper function to transform a row using the following schema

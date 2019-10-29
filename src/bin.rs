@@ -10,7 +10,7 @@ use log::{debug, error, info};
 use serenity::framework::standard::{DispatchError, StandardFramework};
 use std::{
     env,
-    sync::{Arc, Mutex, RwLock},
+    sync::{Arc, Mutex},
 };
 
 fn main() {
@@ -37,6 +37,8 @@ fn main() {
             }) // set the bot's prefix to "!"
             .help(&commands::HELP_COMMAND) // Help
             .group(&commands::ADMIN_GROUP)
+            .group(&commands::CLASSES_GROUP)
+            .group(&commands::GROUPS_GROUP)
             .on_dispatch_error(|context, msg, error| match error {
                 DispatchError::NotEnoughArguments { min, given } => {
                     let _ = msg.channel_id.say(

@@ -1,12 +1,16 @@
 use serenity::framework::standard::macros::group;
 
 mod checks;
+mod classes;
+mod groups;
 mod help;
 mod say;
 
 use checks::ADMIN_CHECK;
 use say::SAY_COMMAND;
 
+pub use classes::CLASSES_GROUP;
+pub use groups::GROUPS_GROUP;
 pub use help::HELP_COMMAND;
 
 group!({
