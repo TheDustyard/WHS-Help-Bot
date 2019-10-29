@@ -1,8 +1,8 @@
 use lib::{
     bot_data::{BotConfig, BotLogger, DatabaseConnection},
-    commands, connect_discord,
+    connect_discord,
     db::Database,
-    discord::framework::StandardFrameworkWrapper,
+    discord::{framework::StandardFrameworkWrapper, commands},
     load_config, load_environment,
     status_logger::StatusLogger,
 };

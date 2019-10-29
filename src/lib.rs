@@ -4,7 +4,6 @@ use std::env;
 use std::fs;
 
 pub mod bot_data;
-pub mod commands;
 pub mod config;
 pub mod db;
 pub mod discord;
