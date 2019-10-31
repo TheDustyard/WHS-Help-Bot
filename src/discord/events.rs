@@ -41,19 +41,22 @@ impl EventHandler for Handler {
             mode
         );
 
-        let data = ctx.data.read();
+        #[cfg(not(debug_assertions))]
+        {
+            let data = ctx.data.read();
 
-        let logger = data.get::<BotLogger>().unwrap();
-        let config = data.get::<BotConfig>().unwrap();
+            let logger = data.get::<BotLogger>().unwrap();
+            let config = data.get::<BotConfig>().unwrap();
 
-        let _ = logger.info(
-            &ctx,
-            format!("Successfully started"),
-            format!(
-                "The bot is running in {} mode. For information on using the bot please visit {}.",
-                mode, config.bot.website
-            ),
-        );
+            let _ = logger.info(
+                &ctx,
+                format!("Successfully started"),
+                format!(
+                    "The bot is running in {} mode. For information on using the bot please visit {}.",
+                    mode, config.bot.website
+                ),
+            );
+        }
     }
 
     // TODO: ADD MORE FIX

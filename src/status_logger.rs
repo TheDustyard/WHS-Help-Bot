@@ -1,6 +1,6 @@
 use log::{error, info, trace, warn};
 use serenity::{
-    http::Http, model::channel::Message, model::id::ChannelId, utils::Colour,
+    http::Http, model::id::ChannelId, utils::Colour,
     Result as SerenityResult,
 };
 use std::fmt::Display;
@@ -37,7 +37,7 @@ impl StatusLogger {
             })
         })?;
 
-        warn!("[{}] {}", title, message);
+        trace!("[{}] {}", title, message);
 
         Ok(())
     }
@@ -65,7 +65,7 @@ impl StatusLogger {
             })
         })?;
 
-        warn!("[{}] {}", title, message);
+        error!("[{}] {}", title, message);
 
         Ok(())
     }

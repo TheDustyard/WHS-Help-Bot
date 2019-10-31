@@ -1,4 +1,4 @@
-use log::{debug, error, warn};
+use log::{debug, error, warn, trace};
 use serenity::client::Client;
 use std::env;
 use std::fs;
@@ -9,7 +9,6 @@ pub mod db;
 pub mod discord;
 pub mod model;
 pub mod status_logger;
-pub mod util;
 
 use config::StaticConfiguration;
 use discord::events::Handler;
@@ -29,7 +28,7 @@ pub fn load_environment() {
 
     // Load logger
     pretty_env_logger::init();
-    debug!("Initialized logger");
+    trace!("Initialized logger");
 }
 
 pub fn connect_discord() -> Client {
@@ -56,10 +55,10 @@ pub fn load_config() -> StaticConfiguration {
     match fs::read_to_string("./config.toml") {
         Ok(file) => {
             // Load config
-            debug!("Loaded config");
+            trace!("Loaded config");
             match toml::from_str::<StaticConfiguration>(&file) {
                 Ok(c) => {
-                    debug!("Parsing config");
+                    trace!("Parsing config");
                     return c;
                 }
                 Err(e) => {

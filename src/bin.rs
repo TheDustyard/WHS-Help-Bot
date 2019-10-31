@@ -2,11 +2,11 @@ use lib::{
     bot_data::{BotConfig, BotLogger, DatabaseConnection},
     connect_discord,
     db::Database,
-    discord::{framework::StandardFrameworkWrapper, commands},
+    discord::{commands, framework::StandardFrameworkWrapper},
     load_config, load_environment,
     status_logger::StatusLogger,
 };
-use log::{debug, error, info};
+use log::{debug, error, trace, warn};
 use serenity::framework::standard::{DispatchError, StandardFramework};
 use std::{
     env,
@@ -94,7 +94,7 @@ fn main() {
         )
     );
 
-    info!(
+    debug!(
         "Starting bot {:?} with prefix {} and owner {}",
         client
             .cache_and_http
@@ -106,16 +106,6 @@ fn main() {
         config.bot.owner.to_string()
     );
 
-    {
-        use serenity::model::id::RoleId;
-
-        debug!("{:#?}", database.get_all_classes());
-        debug!("{:#?}", database.search_classes("jeff"));
-        debug!("{:#?}", database.filter_classes_by_roles(&[RoleId(10), RoleId(20), RoleId(30)]));
-        debug!("{:#?}", database.get_all_groups());
-        debug!("{:#?}", database.search_groups("george"));
-    }
-
     // Persist database connection and config
     {
         let mut data = client.data.write();
@@ -126,32 +116,37 @@ fn main() {
 
     // Smooth Shutdown
     {
+        let shard_manager = Arc::clone(&client.shard_manager);
+
+        #[cfg(not(debug_assertions))]
+        let ctx = Arc::clone(&client.cache_and_http.http);
+        #[cfg(not(debug_assertions))]
         let data = Arc::clone(&client.data);
 
-        let shard_manager = Arc::clone(&client.shard_manager);
-        let ctx = Arc::clone(&client.cache_and_http.http);
+        match ctrlc::set_handler(move || {
+            trace!("Detected Ctrl+C; Running handler.");
+            #[cfg(not(debug_assertions))]
+            {
+                trace!("Sending alert to status channel");
 
-        ctrlc::set_handler(move || {
-            let data = data.read();
-            let status_logger = data.get::<BotLogger>().unwrap();
-
-            if cfg!(debug_assertions) {
-                let _ = status_logger.warn(
-                    &ctx,
-                    "Bot shutting down",
-                    format!("The bot has been stopped manually and is shutting down.\n\nThis is totally normal since the bot is in debug mode and is activly under maintanance. Please do not report this."),
-                );
-            } else {
+                let data = data.read();
+                let status_logger = data.get::<BotLogger>().unwrap();
                 let _ = status_logger.error(
                     &ctx,
                     "Bot shutting down",
                     format!("The bot has been stopped manually and is shutting down.\n\nThis is abnormal since the bot is in release mode, if the bot does not restart in the next few minutes, please report this to the bot owner `DusterTheFirst`"),
                 );
             }
-            
+
+            debug!("Shutting down all shards");
             shard_manager.lock().shutdown_all();
-        })
-        .expect("Error setting Ctrl-C handler");
+        }) {
+            Ok(_) => trace!("Enabled Ctrl+C handler; Shards will be cleanly shut down."),
+            Err(e) => {
+                warn!("Failed to enable Ctrl+C handler, shards will not shut down smoothly!");
+                warn!("{}", e);
+            },
+        };
     }
 
     // start listening for events by starting a single shard

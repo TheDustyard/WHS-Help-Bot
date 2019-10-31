@@ -1,28 +1,15 @@
 use crate::model::{Class, Group};
-use log::{debug, error};
-use rusqlite::{types::Value, vtab::array, Connection, Result as SQLResult, Row, NO_PARAMS};
+use include_sql::include_sql;
+use log::{error, trace};
+use rusqlite::{types::Value, vtab::array, Connection, Result as SQLResult, Row, ToSql, NO_PARAMS};
 use serenity::model::id::{ChannelId, RoleId};
 use std::collections::BTreeMap;
 use std::fmt::Display;
 use std::path::Path;
 use std::rc::Rc;
 
-mod sql {
-    pub mod schema {
-        pub static GROUP: &str = include_str!("sql/schema/group.sql");
-        pub static CLASS: &str = include_str!("sql/schema/class.sql");
-    }
-
-    pub mod query {
-        pub static ALL_CLASSES: &str = include_str!("sql/query/all_classes.sql");
-        pub static COUNT_ALL_CLASSES: &str = include_str!("sql/query/count_all_classes.sql");
-        pub static FILTER_CLASSES_BY_ROLES: &str =
-            include_str!("sql/query/filter_classes_by_roles.sql");
-        pub static SEARCH_CLASSES: &str = include_str!("sql/query/search_classes.sql");
-        pub static ALL_GROUPS: &str = include_str!("sql/query/all_groups.sql");
-        pub static SEARCH_GROUPS: &str = include_str!("sql/query/search_groups.sql");
-    }
-}
+include_sql!("src/sql/class.sql", "?");
+include_sql!("src/sql/group.sql", "?");
 
 pub struct Database {
     connection: Connection,
@@ -36,20 +23,24 @@ impl Database {
     pub fn open<P: AsRef<Path> + Display>(file: P) -> Database {
         match Connection::open(&file) {
             Ok(connection) => {
-                debug!("Connected to database: {}", file);
+                trace!("Connected to database: {}", file);
 
                 // ENABLE FOREIGN KEYS
                 connection
                     .execute("PRAGMA foreign_keys = ON;", NO_PARAMS)
                     .unwrap();
-                debug!("Enabled Foreign Keys on database: {}", file);
+                trace!("Enabled Foreign Keys on database: {}", file);
 
                 array::load_module(&connection).unwrap();
-                debug!("Enabled carray() on database: {}", file);
+                trace!("Enabled carray() on database: {}", file);
 
                 // CREATE TABLES IF NOT EXIST
-                connection.execute(sql::schema::GROUP, NO_PARAMS).unwrap();
-                connection.execute(sql::schema::CLASS, NO_PARAMS).unwrap();
+                connection
+                    .execute(CREATE_GROUP_TABLE, NO_PARAMS)
+                    .unwrap();
+                connection
+                    .execute(CREATE_CLASS_TABLE, NO_PARAMS)
+                    .unwrap();
 
                 return Database { connection };
             }
@@ -65,7 +56,7 @@ impl Database {
     pub fn get_all_classes(&self) -> SQLResult<Vec<Class>> {
         let mut stmt = self
             .connection
-            .prepare_cached(sql::query::ALL_CLASSES)
+            .prepare_cached(GET_ALL_CLASSES)
             .unwrap();
 
         stmt.query_map(NO_PARAMS, |row| Self::get_class_with_group_from_row(row))
@@ -76,7 +67,7 @@ impl Database {
     pub fn classes_count(&self) -> SQLResult<u32> {
         let mut stmt = self
             .connection
-            .prepare_cached(sql::query::COUNT_ALL_CLASSES)
+            .prepare_cached(COUNT_ALL_CLASSES)
             .unwrap();
 
         stmt.query_row(NO_PARAMS, |row| row.get(0))
@@ -99,7 +90,7 @@ impl Database {
     pub fn search_classes(&self, search_term: &str) -> SQLResult<Vec<Class>> {
         let mut stmt = self
             .connection
-            .prepare_cached(sql::query::SEARCH_CLASSES)
+            .prepare_cached(SEARCH_CLASSES)
             .unwrap();
 
         stmt.query_map(&[format!("%{}%", search_term)], |row| {
@@ -113,7 +104,7 @@ impl Database {
     pub fn filter_classes_by_roles(&self, roles: &[RoleId]) -> SQLResult<Vec<Class>> {
         let mut stmt = self
             .connection
-            .prepare_cached(sql::query::FILTER_CLASSES_BY_ROLES)
+            .prepare_cached(FILTER_CLASSES_BY_ROLES)
             .unwrap();
 
         let roles = roles
@@ -132,7 +123,7 @@ impl Database {
     pub fn get_all_groups(&self) -> SQLResult<Vec<Group>> {
         let mut stmt = self
             .connection
-            .prepare_cached(sql::query::ALL_GROUPS)
+            .prepare_cached(GET_ALL_GROUPS)
             .unwrap();
 
         stmt.query_map(NO_PARAMS, |row| Self::get_group_from_row(row))
@@ -140,11 +131,20 @@ impl Database {
             .collect()
     }
 
+    pub fn groups_count(&self) -> SQLResult<u32> {
+        let mut stmt = self
+            .connection
+            .prepare_cached(COUNT_ALL_GROUPS)
+            .unwrap();
+
+        stmt.query_row(NO_PARAMS, |row| row.get(0))
+    }
+
     /// A helper function to fetch all of the classes from the database that fit a search term
     pub fn search_groups(&self, search_term: &str) -> SQLResult<Vec<Group>> {
         let mut stmt = self
             .connection
-            .prepare_cached(sql::query::SEARCH_GROUPS)
+            .prepare_cached(SEARCH_GROUPS)
             .unwrap();
 
         stmt.query_map(&[format!("%{}%", search_term)], |row| {

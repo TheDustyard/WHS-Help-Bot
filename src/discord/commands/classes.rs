@@ -18,18 +18,18 @@ group!({
     options: {
         description: "Class management commands",
         prefixes: ["classes", "c", "cl"],
-        // default_command: list
+        default_command: list
     },
     commands: [list/*, add, remove, edit, mine, join, leave */],
 });
 
-#[command]
-#[description = "List the classes that are avaliable"]
-#[usage = "<filter>"]
-#[example = "History"]
-#[min_args(0)]
-#[max_args(1)]
-fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+/// The internal structure of the list command, shared by !list and !list detailed
+fn list_command_internal(
+    ctx: &mut Context,
+    msg: &Message,
+    args: Args,
+    detailed: bool,
+) -> CommandResult {
     let data = ctx.data.read();
     let db: &Database = &data.get::<DatabaseConnection>().unwrap().lock().unwrap();
 
@@ -46,7 +46,13 @@ fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         Ok(classes) => {
             msg.channel_id.send_message(&ctx, |m| {
                 m.embed(|e| {
-                    create_embed_for_classes(e, all_count.try_into().unwrap(), &classes, filter)
+                    create_embed_for_classes(
+                        e,
+                        all_count.try_into().unwrap(),
+                        &classes,
+                        filter,
+                        detailed,
+                    )
                 });
                 m
             })?;
@@ -66,4 +72,25 @@ fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     };
 
     Ok(())
+}
+
+#[command]
+#[description = "List the classes that are avaliable"]
+#[usage = "{detailed} <filter>"]
+#[example = "History"]
+#[min_args(0)]
+#[max_args(1)]
+#[sub_commands(detailed)]
+fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    list_command_internal(ctx, msg, args, false)
+}
+
+#[command]
+#[description = "List the classes that are avaliable with extra detailed information"]
+#[usage = "<filter>"]
+#[example = "History"]
+#[min_args(0)]
+#[max_args(1)]
+fn detailed(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    list_command_internal(ctx, msg, args, true)
 }
