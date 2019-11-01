@@ -1,7 +1,7 @@
 -- name: create_class_table
 -- Creates the table to store the classes inside of
 CREATE TABLE IF NOT EXISTS `class` (
-  `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+  `id` INTEGER NOT NULL PRIMARY KEY,
   `name` TEXT NOT NULL COLLATE NOCASE,
   `role` TEXT NOT NULL UNIQUE,
   `group` INTEGER,

@@ -7,7 +7,10 @@ use lib::{
     status_logger::StatusLogger,
 };
 use log::{debug, error, trace, warn};
-use serenity::framework::standard::{DispatchError, StandardFramework};
+use serenity::{
+    framework::standard::{DispatchError, StandardFramework},
+    utils::Colour,
+};
 use std::{
     env,
     sync::{Arc, Mutex},
@@ -86,9 +89,17 @@ fn main() {
                 //  Print out an error if it happened
                 if let Err(why) = error {
                     println!("Error in {}: {:?}", cmd_name, why);
-                    msg.channel_id
-                        .say(&ctx, format!("Error in {}: {:?}", cmd_name, why))
-                        .unwrap();
+                    msg.channel_id.send_message(&ctx, |m| {
+                        m.embed(|e| {
+                            e.title(format!("Error in `{}`", cmd_name));
+                            e.description(format!("Encountered an error when executing `{}`.\n```rs\n{:?}```", cmd_name, why));
+                            e.color(Colour::DARK_RED);
+
+                            e
+                        });
+
+                        m
+                    }).unwrap();
                 }
             })
         )
@@ -145,7 +156,7 @@ fn main() {
             Err(e) => {
                 warn!("Failed to enable Ctrl+C handler, shards will not shut down smoothly!");
                 warn!("{}", e);
-            },
+            }
         };
     }
 

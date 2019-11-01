@@ -4,7 +4,7 @@ use std::cmp::Ordering;
 #[derive(Debug)]
 pub struct Class {
     /// The internal ID to use for FKs
-    pub id: u32,
+    pub id: i64,
     /// The name of the class, linked to the name of the role
     pub name: String,
     /// The role id to link this class to
@@ -33,11 +33,10 @@ impl PartialOrd for Class {
     }
 }
 
-
 #[derive(Debug, Clone)]
 pub struct Group {
     /// The internal ID of the group
-    pub id: u32,
+    pub id: i64,
     /// The name of the category, linked to the name of the channel_group
     pub name: String,
     /// The channel group to put all the channels into

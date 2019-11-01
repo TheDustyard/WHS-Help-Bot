@@ -7,7 +7,7 @@ use serenity::{
         macros::{command, group},
         Args, CommandResult,
     },
-    model::channel::Message,
+    model::channel::{ChannelType, Message},
     prelude::*,
     utils::Colour,
 };
@@ -97,11 +97,141 @@ fn detailed(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
 #[command]
 #[description = "Create a group"]
-#[usage = "TODO:"]
-#[example = "TODO:"]
-// #[min_args(0)]
-// #[max_args(1)]
+#[usage = "<name>"]
+#[example = "History"]
+#[checks(Admin)]
+#[num_args(1)]
 fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    let data = ctx.data.read();
+    let db: &Database = &data.get::<DatabaseConnection>().unwrap().lock().unwrap();
+    let config = data.get::<BotConfig>().unwrap();
+
+    let name = args.rest();
+    let channel_group = match config
+        .server
+        .id
+        .create_channel(&ctx, |channel| channel.name(&name).kind(ChannelType::Group))
+    {
+        Ok(cg) => cg,
+        Err(err) => {
+            msg.channel_id.send_message(&ctx, |m| {
+                m.embed(|e| {
+                    e.title("Error");
+                    e.description(format!("Encountered an error when creating the channel group for the new group, aborting.\n```rs\n{:?}```", err));
+                    e.color(Colour::DARK_RED);
+
+                    e
+                });
+
+                m
+            })?;
+            return Ok(());
+        }
+    };
+
+    let vc = match config.server.id.create_channel(&ctx, |channel| {
+        channel
+            .name(format!("{} Help", &name))
+            .kind(ChannelType::Voice)
+    }) {
+        Ok(vc) => vc,
+        Err(err) => {
+            msg.channel_id.send_message(&ctx, |m| {
+                m.embed(|e| {
+                    e.title("Error");
+                    e.description(format!("Encountered an error when creating the voice chat for the new group, aborting.\n```rs\n{:?}```", err));
+                    e.color(Colour::DARK_RED);
+
+                    e
+                });
+
+                m
+            })?;
+            return Ok(());
+        }
+    };
+
+    match db.insert_group(name, channel_group.id, vc.id) {
+        Ok(group) => {
+            msg.channel_id.send_message(&ctx, |m| {
+                m.embed(|e| {
+                    e.title(format!("Successfully created new group {}", group.name));
+                    e.description(format!(
+                        "
+                        Name: {}
+                        Channel Group: {}
+                        Voice Chat: {}
+                        Id: `{}`",
+                        group.name,
+                        group.channel_group.mention(),
+                        group.vc.mention(),
+                        group.id
+                    ));
+                    e.color(Colour::DARK_GREEN);
+
+                    e
+                });
+
+                m
+            })?;
+        }
+        Err(err) => {
+            msg.channel_id.send_message(&ctx, |m| {
+                m.embed(|e| {
+                    e.title("Error");
+                    e.description(format!(
+                        "Encountered an error when saving the new group, aborting.\n```rs\n{:?}```",
+                        err
+                    ));
+                    e.color(Colour::DARK_RED);
+
+                    e
+                });
+
+                m
+            })?;
+
+            match channel_group.delete(&ctx) {
+                Ok(_) => {}
+                Err(err) => {
+                    msg.channel_id.send_message(&ctx, |m| {
+                        m.embed(|e| {
+                            e.title("Error");
+                            e.description(format!(
+                                "Encountered an error when deleting the created channel group, `{}`, you will have to do so manually.\n```rs\n{:?}```",
+                                channel_group, err
+                            ));
+                            e.color(Colour::DARK_RED);
+
+                            e
+                        });
+
+                        m
+                    })?;
+                }
+            };
+            match vc.delete(&ctx) {
+                Ok(_) => {}
+                Err(err) => {
+                    msg.channel_id.send_message(&ctx, |m| {
+                        m.embed(|e| {
+                            e.title("Error");
+                            e.description(format!(
+                                "Encountered an error when deleting the created voice channel, `{}`, you will have to do so manually.\n```rs\n{:?}```",
+                                vc, err
+                            ));
+                            e.color(Colour::DARK_RED);
+
+                            e
+                        });
+
+                        m
+                    })?;
+                }
+            };
+        }
+    }
+
     Ok(())
 }
 
@@ -109,6 +239,7 @@ fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 #[description = "Import a group"]
 #[usage = "TODO:"]
 #[example = "TODO:"]
+#[checks(Admin)]
 // #[min_args(0)]
 // #[max_args(1)]
 fn import(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {

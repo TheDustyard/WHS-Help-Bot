@@ -1,7 +1,7 @@
 -- name: create_group_table
 -- Creates the table to store the classes inside of
 CREATE TABLE IF NOT EXISTS `group` (
-  `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE,
+  `id` INTEGER NOT NULL PRIMARY KEY,
   `name` TEXT NOT NULL COLLATE NOCASE,
   `channel_group` TEXT NOT NULL UNIQUE,
   `vc` TEXT NOT NULL UNIQUE
@@ -34,3 +34,8 @@ SELECT
 FROM `group`
 WHERE
   `name` LIKE ?;
+
+-- name: insert_group
+-- Insert a group into the table
+INSERT INTO `group`(`name`, `channel_group`, `vc`,)
+VALUES(?, ?, ?);
