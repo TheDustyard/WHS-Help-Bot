@@ -14,14 +14,16 @@ SELECT
   `name`,
   `channel_group`,
   `vc`
-FROM `group`;
+FROM
+  `group`;
 
 -- name: count_all_groups
 -- Get the count of how many groups there
 -- are in the table
 SELECT
   COUNT(*)
-FROM `group`;
+FROM
+  `group`;
 
 -- name: search_groups
 -- Search through the table of groups and
@@ -31,11 +33,14 @@ SELECT
   `name`,
   `channel_group`,
   `vc`
-FROM `group`
+FROM
+  `group`
 WHERE
   `name` LIKE ?;
 
 -- name: insert_group
 -- Insert a group into the table
-INSERT INTO `group`(`name`, `channel_group`, `vc`,)
-VALUES(?, ?, ?);
+INSERT INTO
+  `group`(`name`, `channel_group`, `vc`)
+VALUES
+  (?, ?, ?);

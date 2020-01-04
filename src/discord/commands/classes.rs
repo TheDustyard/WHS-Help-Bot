@@ -18,7 +18,7 @@ group!({
     options: {
         description: "Class management commands",
         prefixes: ["classes", "c", "cl"],
-        default_command: list
+        // default_command: list
     },
     commands: [list/*, add, remove, edit, mine, join, leave */],
 });

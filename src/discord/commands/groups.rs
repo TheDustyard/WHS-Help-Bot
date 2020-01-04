@@ -18,7 +18,7 @@ group!({
     options: {
         description: "Group management commands",
         prefixes: ["groups", "g", "gr"],
-        default_command: list
+        // default_command: list
     },
     commands: [list, create, import/*, remove, edit, mine, join, leave */],
 });
@@ -76,10 +76,8 @@ fn list_command_internal(
 
 #[command]
 #[description = "List the groups that are avaliable"]
-#[usage = "{detailed} <filter>"]
+#[usage = "{detailed} [filter..]"]
 #[example = "History"]
-#[min_args(0)]
-#[max_args(1)]
 #[sub_commands(detailed)]
 fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     list_command_internal(ctx, msg, args, false)
@@ -87,10 +85,8 @@ fn list(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
 #[command]
 #[description = "List the groups that are avaliable with extra detailed information"]
-#[usage = "<filter>"]
+#[usage = "[filter..]"]
 #[example = "History"]
-#[min_args(0)]
-#[max_args(1)]
 fn detailed(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     list_command_internal(ctx, msg, args, true)
 }
@@ -101,23 +97,22 @@ fn detailed(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 #[example = "History"]
 #[checks(Admin)]
 #[num_args(1)]
-fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+fn create(ctx: &mut Context, msg: &Message, mut args: Args) -> CommandResult {
     let data = ctx.data.read();
     let db: &Database = &data.get::<DatabaseConnection>().unwrap().lock().unwrap();
     let config = data.get::<BotConfig>().unwrap();
+    let logger = data.get::<BotLogger>().unwrap();
 
-    let name = args.rest();
-    let channel_group = match config
-        .server
-        .id
-        .create_channel(&ctx, |channel| channel.name(&name).kind(ChannelType::Group))
-    {
+    let name = args.single_quoted::<String>()?.replace(" ", "-");
+    let channel_group = match config.server.id.create_channel(&ctx, |channel| {
+        channel.name(&name).kind(ChannelType::Category)
+    }) {
         Ok(cg) => cg,
         Err(err) => {
             msg.channel_id.send_message(&ctx, |m| {
                 m.embed(|e| {
                     e.title("Error");
-                    e.description(format!("Encountered an error when creating the channel group for the new group, aborting.\n```rs\n{:?}```", err));
+                    e.description(format!("Encountered an error when creating the channel group `{}`, aborting.\n```rs\n{:?}```", name, err));
                     e.color(Colour::DARK_RED);
 
                     e
@@ -131,7 +126,8 @@ fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
     let vc = match config.server.id.create_channel(&ctx, |channel| {
         channel
-            .name(format!("{} Help", &name))
+            .name(format!("{}-help", &name))
+            .category(channel_group.id)
             .kind(ChannelType::Voice)
     }) {
         Ok(vc) => vc,
@@ -151,7 +147,7 @@ fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
         }
     };
 
-    match db.insert_group(name, channel_group.id, vc.id) {
+    match db.insert_group(&name, channel_group.id, vc.id) {
         Ok(group) => {
             msg.channel_id.send_message(&ctx, |m| {
                 m.embed(|e| {
@@ -174,6 +170,23 @@ fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 
                 m
             })?;
+
+            //TODO: LOG
+            logger.success(
+                &ctx,
+                format!("{} created group `{}`", msg.author.tag(), group.name),
+                format!(
+                    "
+                        Name: {}
+                        Channel Group: {}
+                        Voice Chat: {}
+                        Id: `{}`",
+                    group.name,
+                    group.channel_group.mention(),
+                    group.vc.mention(),
+                    group.id
+                ),
+            )?;
         }
         Err(err) => {
             msg.channel_id.send_message(&ctx, |m| {
@@ -243,5 +256,16 @@ fn create(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
 // #[min_args(0)]
 // #[max_args(1)]
 fn import(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
+    Ok(())
+}
+
+#[command]
+#[description = "Delete a group"]
+#[usage = "TODO:"]
+#[example = "TODO:"]
+#[checks(Admin)]
+// #[min_args(0)]
+// #[max_args(1)]
+fn delete(ctx: &mut Context, msg: &Message, args: Args) -> CommandResult {
     Ok(())
 }

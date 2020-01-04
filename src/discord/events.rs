@@ -1,4 +1,4 @@
-use crate::bot_data::{BotConfig, BotLogger};
+use crate::bot_data::{BotConfig, BotLogger, DatabaseConnection};
 use log::info;
 use serenity::{
     model::{guild::Action, prelude::*},
@@ -41,13 +41,14 @@ impl EventHandler for Handler {
             mode
         );
 
+        let data = ctx.data.read();
+
+        let logger = data.get::<BotLogger>().unwrap();
+        let database = data.get::<DatabaseConnection>().unwrap().lock().unwrap();
+        let config = data.get::<BotConfig>().unwrap();
+
         #[cfg(not(debug_assertions))]
         {
-            let data = ctx.data.read();
-
-            let logger = data.get::<BotLogger>().unwrap();
-            let config = data.get::<BotConfig>().unwrap();
-
             let _ = logger.info(
                 &ctx,
                 format!("Successfully started"),
@@ -57,6 +58,8 @@ impl EventHandler for Handler {
                 ),
             );
         }
+
+        database.sync(logger, config.server.id, &ctx).unwrap();
     }
 
     // TODO: ADD MORE FIX

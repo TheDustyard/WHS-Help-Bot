@@ -20,7 +20,14 @@ fn main() {
     load_environment();
 
     let database = match env::var("DATABASE_URL") {
-        Ok(database_url) => Database::open(database_url),
+        Ok(database_url) => match Database::open(database_url) {
+            Ok(database) => database,
+            Err(e) => {
+                let message = format!("Failed to open the Database: {:?}", e);
+                error!("{}", message);
+                panic!("{}", message);
+            }
+        },
         Err(e) => {
             let message = format!("Failed to load DATABASE_URL environment variable: {:?}", e);
             error!("{}", message);
